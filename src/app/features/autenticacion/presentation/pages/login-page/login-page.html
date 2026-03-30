@@ -1,48 +1,57 @@
-<app-auth-shell [logoSrc]="'images/GOBMX.png'" [title]="'Registro Publico Vehicular <br/> REPUVE'"
+<app-auth-shell [logoSrc]="'images/GOBMX.png'" [title]="'Registro Publico Vehicular<br>REPUVE'"
     [subtitle]="'Sujetos obligados'">
     <form class="login-form" (ngSubmit)="submit()">
         <div class="field-block">
-            <label class="field-label" for="username">Cuenta de usuario</label>
-            <input id="username" name="username" type="text" class="field-input" [(ngModel)]="model.username" />
+            <label class="field-label" for="usuario">Cuenta de usuario</label>
+            <input id="usuario" name="usuario" type="text" class="field-input" [(ngModel)]="model.usuario" />
         </div>
 
         <div class="field-block">
-            <label class="field-label" for="email">Correo</label>
-            <input id="email" name="email" type="email" class="field-input" [(ngModel)]="model.email" />
+            <label class="field-label" for="correoElectronico">Correo</label>
+            <input id="correoElectronico" name="correoElectronico" type="email" class="field-input"
+                [(ngModel)]="model.correoElectronico" />
         </div>
 
         <div class="field-block">
-            <label class="field-label" for="phone">Numero de celular</label>
+            <label class="field-label" for="numeroCelular">Numero de celular</label>
 
             <div class="phone-row">
                 <div class="phone-prefix">+52</div>
-                <input id="phone" name="phone" type="text" class="phone-input" [(ngModel)]="model.phone" />
+                <input id="numeroCelular" name="numeroCelular" type="text" class="phone-input"
+                    [(ngModel)]="model.numeroCelular" />
             </div>
         </div>
 
         <div class="captcha-wrapper">
+            @if (loadingCaptcha) {
+            <div class="captcha-loading">Cargando captcha...</div>
+            } @else if (captchaImageSrc) {
             <img class="captcha-image" [src]="captchaImageSrc" alt="Captcha" />
+            }
 
-            <button type="button" class="refresh-link" (click)="refreshCaptcha()">
+            <button type="button" class="refresh-link" (click)="loadCaptcha()">
                 Refrescar codigo
             </button>
         </div>
 
-        <div class="row g-2 align-items-center code-row">
-            <div class="col-12 col-sm-7">
-                <input name="captchaCode" type="text" class="field-input" placeholder="Ingrese el codigo"
-                    [(ngModel)]="model.captchaCode" />
-            </div>
-
-            <div class="col-12 col-sm-5">
-                <button type="button" class="btn btn-validate w-100" (click)="validateCaptcha()">
-                    Validar
-                </button>
-            </div>
+        <div class="field-block">
+            <input id="captchaRespuesta" name="captchaRespuesta" type="text" class="field-input"
+                placeholder="Ingrese el codigo" [(ngModel)]="model.captchaRespuesta" />
         </div>
 
-        <button type="submit" class="btn btn-login w-100">
-            Iniciar sesion
+        @if (errorMessage) {
+        <div class="error-box">
+            {{ errorMessage }}
+        </div>
+        }
+
+        <button type="submit" class="btn btn-login w-100" [disabled]="submitting">
+            {{ submitting ? 'Procesando...' : 'Crear cuenta' }}
         </button>
     </form>
 </app-auth-shell>
+
+<app-access-feedback-modal [isOpen]="modalState.isOpen" [variant]="modalState.variant" [message]="modalState.message"
+    [emailMasked]="modalState.emailMasked" [buttonText]="'Aceptar'" [showMailIcon]="modalState.variant === 'success'"
+    (closed)="closeModal()" (accepted)="onModalAccept()">
+</app-access-feedback-modal>

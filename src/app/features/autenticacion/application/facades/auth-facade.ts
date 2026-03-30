@@ -1,23 +1,24 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { GetCaptcha } from '../use-cases/get-captcha';
 import { Login } from '../use-cases/login';
+import { CaptchaEntity } from '../../domain/entities/captcha.entity';
 import { LoginFormEntity } from '../../domain/entities/login-form.entity';
-import { AuthRepositoryImpl } from '../../infrastructure/repositories/auth-repository-impl';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthFacade {
   constructor(
-    private readonly loginUseCase: Login,
-    private readonly authRepositoryImpl: AuthRepositoryImpl
+    private readonly getCaptchaUseCase: GetCaptcha,
+    private readonly loginUseCase: Login
   ) { }
+
+  getCaptcha(): Observable<CaptchaEntity> {
+    return this.getCaptchaUseCase.execute();
+  }
 
   login(form: LoginFormEntity): Observable<void> {
     return this.loginUseCase.execute(form);
-  }
-
-  validateCaptcha(captcha: string): Observable<boolean> {
-    return this.authRepositoryImpl.validateCaptcha(captcha);
   }
 }

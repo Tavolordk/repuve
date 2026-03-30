@@ -1,6 +1,7 @@
 export interface LoginFormEntity {
-    username: string;
-    email: string;
-    phone: string;
-    captcha: string;
+    usuario: string;
+    correoElectronico: string;
+    numeroCelular: string;
+    captchaId: string;
+    captchaRespuesta: string;
 }

@@ -1,0 +1,36 @@
+@if (isOpen) {
+<div class="access-modal-backdrop" (click)="onBackdropClick($event)">
+    <div class="access-modal-card">
+
+        <button type="button" class="access-modal-close" aria-label="Cerrar modal" (click)="close()">
+            ×
+        </button>
+
+        @if (isSuccess && showMailIcon) {
+        <div class="access-modal-icon">
+            <img src="images/mail_icon.png" alt="Correo" />
+        </div>
+        }
+
+        <div class="access-modal-body">
+            @if (isSuccess) {
+            <p class="access-modal-message">
+                Enviamos un enlace a
+                <strong>{{ emailMasked }}</strong>
+                para generar tu nueva cuenta. Si no lo encuentras, revisa tu carpeta de spam.
+            </p>
+            } @else {
+            <p class="access-modal-message">
+                {{ message }}
+            </p>
+            }
+        </div>
+
+        <div class="access-modal-actions">
+            <button type="button" class="access-modal-button" (click)="accept()">
+                {{ buttonText }}
+            </button>
+        </div>
+    </div>
+</div>
+}
