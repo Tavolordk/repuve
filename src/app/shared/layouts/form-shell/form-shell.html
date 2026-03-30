@@ -1,0 +1,33 @@
+<div class="container-fluid form-shell">
+    <div class="row justify-content-center">
+        <div class="col-12 col-xl-10">
+            <div class="form-shell__header">
+                <div class="form-shell__brand">
+                    <img class="form-shell__logo" [src]="logoSrc" alt="Logo institucional" />
+
+                    <div>
+                        <h1 class="form-shell__title">{{ title }}</h1>
+
+                        @if (subtitle) {
+                        <p class="form-shell__subtitle">{{ subtitle }}</p>
+                        }
+                    </div>
+                </div>
+
+                <div class="form-shell__stepper">
+                    <div class="form-shell__stepper-text">
+                        Paso {{ currentStep }} de {{ totalSteps }}
+                    </div>
+
+                    <div class="form-shell__progress">
+                        <div class="form-shell__progress-bar" [style.width.%]="(currentStep / totalSteps) * 100"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-shell__card">
+                <ng-content></ng-content>
+            </div>
+        </div>
+    </div>
+</div>

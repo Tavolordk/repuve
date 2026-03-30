@@ -1,0 +1,48 @@
+<app-auth-shell [logoSrc]="'images/GOBMX.png'" [title]="'Registro Publico Vehicular <br/> REPUVE'"
+    [subtitle]="'Sujetos obligados'">
+    <form class="login-form" (ngSubmit)="submit()">
+        <div class="field-block">
+            <label class="field-label" for="username">Cuenta de usuario</label>
+            <input id="username" name="username" type="text" class="field-input" [(ngModel)]="model.username" />
+        </div>
+
+        <div class="field-block">
+            <label class="field-label" for="email">Correo</label>
+            <input id="email" name="email" type="email" class="field-input" [(ngModel)]="model.email" />
+        </div>
+
+        <div class="field-block">
+            <label class="field-label" for="phone">Numero de celular</label>
+
+            <div class="phone-row">
+                <div class="phone-prefix">+52</div>
+                <input id="phone" name="phone" type="text" class="phone-input" [(ngModel)]="model.phone" />
+            </div>
+        </div>
+
+        <div class="captcha-wrapper">
+            <img class="captcha-image" [src]="captchaImageSrc" alt="Captcha" />
+
+            <button type="button" class="refresh-link" (click)="refreshCaptcha()">
+                Refrescar codigo
+            </button>
+        </div>
+
+        <div class="row g-2 align-items-center code-row">
+            <div class="col-12 col-sm-7">
+                <input name="captchaCode" type="text" class="field-input" placeholder="Ingrese el codigo"
+                    [(ngModel)]="model.captchaCode" />
+            </div>
+
+            <div class="col-12 col-sm-5">
+                <button type="button" class="btn btn-validate w-100" (click)="validateCaptcha()">
+                    Validar
+                </button>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-login w-100">
+            Iniciar sesion
+        </button>
+    </form>
+</app-auth-shell>

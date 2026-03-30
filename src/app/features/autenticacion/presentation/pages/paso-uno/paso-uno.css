@@ -1,0 +1,46 @@
+:host {
+  display: block;
+}
+
+.form-label-custom {
+  display: block;
+  margin-bottom: 0.45rem;
+  font-weight: 700;
+  color: #222;
+}
+
+.form-control-custom {
+  width: 100%;
+  height: 48px;
+  border: 1px solid #d8d8d8;
+  border-radius: 14px;
+  padding: 0 0.95rem;
+  outline: none;
+  background: #fff;
+}
+
+.form-control-custom:focus {
+  border-color: rgba(122, 18, 63, 0.45);
+  box-shadow: 0 0 0 0.18rem rgba(122, 18, 63, 0.12);
+}
+
+.actions {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-next {
+  min-width: 180px;
+  height: 46px;
+  border: none;
+  border-radius: 999px;
+  background: #7a123f;
+  color: #fff;
+  font-weight: 700;
+}
+
+.btn-next:hover {
+  background: #641033;
+  color: #fff;
+}

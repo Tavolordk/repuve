@@ -1,0 +1,20 @@
+<app-auth-shell [logoSrc]="'images/GOBMX.png'" [title]="'Verificacion de codigo'"
+    [subtitle]="'Ingresa el codigo enviado a tu correo o celular'">
+    <div class="verify-box">
+        <p class="verify-message">
+            Escribe el codigo de verificacion para continuar con el proceso.
+        </p>
+
+        <input type="text" class="verify-input" maxlength="6" [(ngModel)]="code" placeholder="000000" />
+
+        <div class="verify-actions">
+            <button type="button" class="btn btn-outline-custom" (click)="resendCode()">
+                Reenviar codigo
+            </button>
+
+            <button type="button" class="btn btn-primary-custom" (click)="verify()">
+                Confirmar
+            </button>
+        </div>
+    </div>
+</app-auth-shell>

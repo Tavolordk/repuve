@@ -1,0 +1,146 @@
+:host {
+  display: block;
+}
+
+.login-form {
+  width: 100%;
+}
+
+.field-block {
+  margin-bottom: 1rem;
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 0.55rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.field-input {
+  width: 100%;
+  height: 48px;
+  padding: 0 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 18px;
+  outline: none;
+  background: rgba(255, 255, 255, 0.96);
+  font-size: 1rem;
+  color: #222;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.field-input:focus {
+  border-color: rgba(122, 18, 63, 0.35);
+  box-shadow:
+    0 0 0 0.18rem rgba(122, 18, 63, 0.14),
+    0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.phone-row {
+  display: flex;
+  align-items: stretch;
+}
+
+.phone-prefix {
+  min-width: 64px;
+  height: 48px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-right: none;
+  border-radius: 18px 0 0 18px;
+  background: rgba(255, 255, 255, 0.96);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #555;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.phone-input {
+  width: 100%;
+  height: 48px;
+  padding: 0 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 0 18px 18px 0;
+  outline: none;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.phone-input:focus {
+  border-color: rgba(122, 18, 63, 0.35);
+  box-shadow:
+    0 0 0 0.18rem rgba(122, 18, 63, 0.14),
+    0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.captcha-wrapper {
+  text-align: center;
+  margin: 0.6rem 0 1rem;
+}
+
+.captcha-image {
+  max-width: 160px;
+  min-height: 48px;
+  display: block;
+  margin: 0 auto 0.35rem;
+}
+
+.refresh-link {
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: #444;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.refresh-link:hover {
+  color: #7a123f;
+}
+
+.code-row {
+  margin-bottom: 1rem;
+}
+
+.btn-validate,
+.btn-login {
+  border: none;
+  color: #fff;
+  font-weight: 800;
+}
+
+.btn-validate {
+  height: 48px;
+  border-radius: 14px;
+  background: #7a123f;
+}
+
+.btn-login {
+  height: 50px;
+  border-radius: 999px;
+  background: #7a123f;
+}
+
+.btn-validate:hover,
+.btn-login:hover {
+  background: #641033;
+  color: #fff;
+}
+
+@media (max-width: 767.98px) {
+  .field-label {
+    font-size: 0.92rem;
+  }
+
+  .field-input,
+  .phone-input,
+  .phone-prefix,
+  .btn-validate,
+  .btn-login {
+    height: 44px;
+    font-size: 0.95rem;
+  }
+}

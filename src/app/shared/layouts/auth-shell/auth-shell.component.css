@@ -1,0 +1,175 @@
+:host {
+  display: block;
+}
+
+.auth-shell {
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.46) 0%,
+      rgba(0, 0, 0, 0.22) 28%,
+      rgba(255, 255, 255, 0) 58%
+    ),
+    url('/images/background_av.jpg') center center / cover no-repeat;
+}
+
+.auth-shell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('/images/angel.png') 34% center / 760px no-repeat;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.auth-shell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.06) 0%,
+    rgba(255, 255, 255, 0) 40%,
+    rgba(255, 255, 255, 0.08) 100%
+  );
+  z-index: 1;
+  pointer-events: none;
+}
+
+.auth-shell__panel {
+  width: 100%;
+  max-width: none;
+  padding: 2rem 3rem 2rem 4.5rem;
+  border-radius: 34px 0 0 34px;
+  background: rgba(245, 245, 245, 0.64);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+.auth-shell__logo {
+  max-width: 360px;
+}
+
+.auth-shell__title {
+  font-size: 2.1rem;
+  line-height: 1.18;
+  color: #111;
+}
+
+.auth-shell__subtitle {
+  font-size: 1.15rem;
+  color: #111;
+}
+
+@media (max-width: 1399.98px) {
+  .auth-shell::before {
+    background-size: 690px;
+    background-position: 31% center;
+  }
+}
+
+@media (max-width: 1199.98px) {
+  .auth-shell::before {
+    background-size: 620px;
+    background-position: 28% center;
+  }
+
+  .auth-shell__panel {
+    max-width: 520px;
+    padding: 1.6rem 1.8rem 1.8rem;
+  }
+
+  .auth-shell__title {
+    font-size: 1.9rem;
+  }
+}
+
+@media (max-width: 991.98px) {
+  .auth-shell {
+    background:
+      linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0.4) 0%,
+        rgba(0, 0, 0, 0.16) 35%,
+        rgba(255, 255, 255, 0.12) 100%
+      ),
+      url('/images/background_av.jpg') center center / cover no-repeat;
+  }
+
+  .auth-shell::before {
+    background-size: 420px;
+    background-position: center 18%;
+    opacity: 0.95;
+  }
+
+  .auth-shell__panel {
+    max-width: 100%;
+    margin: 0;
+    border-radius: 28px;
+    background: rgba(245, 245, 245, 0.72);
+  }
+
+  .auth-shell__logo {
+    max-width: 320px;
+  }
+
+  .auth-shell__title {
+    font-size: 1.7rem;
+  }
+
+  .auth-shell__subtitle {
+    font-size: 1.05rem;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .auth-shell::before {
+    background-size: 320px;
+    background-position: center 11%;
+    opacity: 0.88;
+  }
+
+  .auth-shell__panel {
+    padding: 1.25rem 1rem 1.5rem;
+    border-radius: 22px;
+    background: rgba(245, 245, 245, 0.78);
+  }
+
+  .auth-shell__logo {
+    max-width: 250px;
+  }
+
+  .auth-shell__title {
+    font-size: 1.35rem;
+  }
+
+  .auth-shell__subtitle {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .auth-shell::before {
+    background-size: 280px;
+    background-position: center 10%;
+  }
+
+  .auth-shell__panel {
+    padding: 1.1rem 0.85rem 1.35rem;
+  }
+
+  .auth-shell__title {
+    font-size: 1.2rem;
+  }
+
+  .auth-shell__subtitle {
+    font-size: 0.9rem;
+  }
+
+  .auth-shell__logo {
+    max-width: 220px;
+  }
+}

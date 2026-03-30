@@ -1,0 +1,18 @@
+<div class="container-fluid auth-shell px-0">
+    <div class="row g-0 min-vh-100 auth-shell__row">
+        <div class="col-12 col-lg-7 auth-shell__visual d-none d-lg-block"></div>
+
+        <div class="col-12 col-lg-5 min-vh-100 d-flex justify-content-end align-items-end p-0 h-auto">
+            <div class="auth-shell__panel justify-content-center align-items-center d-flex flex-column">
+                <img class="auth-shell__logo" [src]="logoSrc" alt="Logo institucional" />
+
+                <h1 class="auth-shell__title text-center fw-bold mb-2" [innerHTML]="title"></h1>
+                @if (subtitle) {
+                <p class="auth-shell__subtitle">{{ subtitle }}</p>
+                }
+
+                <ng-content></ng-content>
+            </div>
+        </div>
+    </div>
+</div>

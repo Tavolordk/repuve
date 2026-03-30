@@ -1,0 +1,31 @@
+<app-form-shell [logoSrc]="'images/GOBMX.png'" [title]="'Registro de sujetos obligados'"
+    [subtitle]="'Datos institucionales'" [currentStep]="2" [totalSteps]="2">
+    <form (ngSubmit)="finish()">
+        <div class="row g-3">
+            <div class="col-12 col-md-6">
+                <label class="form-label-custom">Institucion</label>
+                <input type="text" class="form-control-custom" [(ngModel)]="model.institucion" name="institucion" />
+            </div>
+
+            <div class="col-12 col-md-6">
+                <label class="form-label-custom">Cargo</label>
+                <input type="text" class="form-control-custom" [(ngModel)]="model.cargo" name="cargo" />
+            </div>
+
+            <div class="col-12 col-md-6">
+                <label class="form-label-custom">Entidad federativa</label>
+                <input type="text" class="form-control-custom" [(ngModel)]="model.entidad" name="entidad" />
+            </div>
+
+            <div class="col-12">
+                <label class="form-label-custom">Domicilio</label>
+                <textarea class="form-textarea-custom" [(ngModel)]="model.domicilio" name="domicilio"></textarea>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button type="button" class="btn btn-back" (click)="back()">Anterior</button>
+            <button type="submit" class="btn btn-finish">Finalizar</button>
+        </div>
+    </form>
+</app-form-shell>
