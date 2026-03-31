@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { AuthRepository } from '../../domain/repositories/auth.repository';
-import { LoginFormEntity } from '../../domain/entities/login-form.entity';
+import { LoginFormEntity, LoginResponseEntity } from '../../domain/entities/login-form.entity';
 import { CaptchaEntity } from '../../domain/entities/captcha.entity';
 import { AuthApi } from '../services/auth-api';
 
@@ -15,7 +15,7 @@ export class AuthRepositoryImpl implements AuthRepository {
     return this.authApi.getCaptcha();
   }
 
-  login(form: LoginFormEntity): Observable<void> {
+  login(form: LoginFormEntity): Observable<LoginResponseEntity> {
     return this.authApi.login(form);
   }
 }

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { LoginFormEntity } from '../../domain/entities/login-form.entity';
+import { LoginFormEntity, LoginResponseEntity } from '../../domain/entities/login-form.entity';
 import { AuthRepository } from '../../domain/repositories/auth.repository';
 import { AuthRepositoryImpl } from '../../infrastructure/repositories/auth-repository-impl';
 
@@ -14,7 +14,7 @@ export class Login {
     this.repository = authRepositoryImpl;
   }
 
-  execute(form: LoginFormEntity): Observable<void> {
+  execute(form: LoginFormEntity): Observable<LoginResponseEntity> {
     return this.repository.login(form);
   }
 }

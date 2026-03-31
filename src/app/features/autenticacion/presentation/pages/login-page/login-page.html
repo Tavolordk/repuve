@@ -1,54 +1,143 @@
 <app-auth-shell [logoSrc]="'images/GOBMX.png'" [title]="'Registro Publico Vehicular<br>REPUVE'"
     [subtitle]="'Sujetos obligados'">
-    <form class="login-form" (ngSubmit)="submit()">
-        <div class="field-block">
-            <label class="field-label" for="usuario">Cuenta de usuario</label>
-            <input id="usuario" name="usuario" type="text" class="field-input" [(ngModel)]="model.usuario" />
-        </div>
 
-        <div class="field-block">
-            <label class="field-label" for="correoElectronico">Correo</label>
-            <input id="correoElectronico" name="correoElectronico" type="email" class="field-input"
-                [(ngModel)]="model.correoElectronico" />
-        </div>
+    <ng-container [ngSwitch]="currentStep">
 
-        <div class="field-block">
-            <label class="field-label" for="numeroCelular">Numero de celular</label>
+        <!-- STEP 1: ACCESS -->
+        <form *ngSwitchCase="'access'" class="login-form" (ngSubmit)="submit()">
+            <div class="field-block">
+                <label class="field-label" for="usuario">Cuenta de usuario</label>
+                <input id="usuario" name="usuario" type="text" class="field-input" [(ngModel)]="model.usuario" />
+            </div>
 
-            <div class="phone-row">
-                <div class="phone-prefix">+52</div>
-                <input id="numeroCelular" name="numeroCelular" type="text" class="phone-input"
-                    [(ngModel)]="model.numeroCelular" />
+            <div class="field-block">
+                <label class="field-label" for="correoElectronico">Correo</label>
+                <input id="correoElectronico" name="correoElectronico" type="email" class="field-input"
+                    [(ngModel)]="model.correoElectronico" />
+            </div>
+
+            <div class="field-block">
+                <label class="field-label" for="numeroCelular">Numero de celular</label>
+                <div class="phone-row">
+                    <div class="phone-prefix">+52</div>
+                    <input id="numeroCelular" name="numeroCelular" type="text" class="phone-input"
+                        [(ngModel)]="model.numeroCelular" />
+                </div>
+            </div>
+
+            <div class="captcha-wrapper">
+                <div *ngIf="loadingCaptcha" class="captcha-loading">
+                    Cargando captcha...
+                </div>
+
+                <ng-container *ngIf="!loadingCaptcha && captchaImageSrc">
+                    <img class="captcha-image" [src]="captchaImageSrc" alt="Captcha" />
+                    <div class="captcha-expiry">
+                        Expira en: {{ captchaTimeLabel }}
+                    </div>
+                </ng-container>
+
+                <div *ngIf="captchaExpired && !loadingCaptcha" class="captcha-expired">
+                    El captcha expiró. Solicita uno nuevo.
+                </div>
+
+                <button type="button" class="refresh-link" (click)="loadCaptcha()" [disabled]="loadingCaptcha">
+                    {{ loadingCaptcha ? 'Cargando...' : 'Refrescar codigo' }}
+                </button>
+            </div>
+
+            <div class="field-block">
+                <input id="captchaRespuesta" name="captchaRespuesta" type="text" class="field-input"
+                    placeholder="Ingrese el codigo" [(ngModel)]="model.captchaRespuesta"
+                    [disabled]="loadingCaptcha || captchaExpired || !model.captchaId" />
+            </div>
+
+            <div *ngIf="errorMessage" class="error-box">
+                {{ errorMessage }}
+            </div>
+
+            <button type="submit" class="btn btn-login w-100"
+                [disabled]="submitting || loadingCaptcha || captchaExpired || !model.captchaId">
+                {{ submitting ? 'Procesando...' : 'Crear cuenta' }}
+            </button>
+        </form>
+
+        <!-- STEP 2: VERIFICATION CODE -->
+        <div *ngSwitchCase="'verification-code'" class="verification-step">
+            <div class="verification-user">
+                <div class="field-block compact">
+                    <label class="field-label">Cuenta de usuario</label>
+                    <input type="text" class="field-input" [ngModel]="verificationStepData.usuario" name="usuarioStep2"
+                        readonly />
+                </div>
+            </div>
+
+            <div class="verification-section-title">
+                Enviar codigo de verificacion
+            </div>
+
+            <div class="channel-selector">
+                <button type="button" class="channel-btn" [class.active]="verificationChannel === 'email'"
+                    (click)="selectVerificationChannel('email')">
+                    Correo electronico
+                </button>
+
+                <button type="button" class="channel-btn" [class.active]="verificationChannel === 'telegram'"
+                    (click)="selectVerificationChannel('telegram')">
+                    Telegram
+                </button>
+            </div>
+
+            <div class="channel-hint">
+                <span *ngIf="verificationChannel === 'email'">
+                    Se enviará al correo {{ verificationStepData.correoElectronico }}
+                </span>
+                <span *ngIf="verificationChannel === 'telegram'">
+                    Se enviará al numero {{ verificationStepData.numeroCelular }}
+                </span>
+            </div>
+
+            <div class="verification-actions">
+                <button type="button" class="btn btn-secondary-action" (click)="sendVerificationCode()"
+                    [disabled]="sendingVerificationCode">
+                    {{ sendingVerificationCode ? 'Enviando...' : 'Enviar' }}
+                </button>
+            </div>
+
+            <div class="field-block">
+                <input type="text" class="field-input" placeholder="Ingrese el codigo" [(ngModel)]="verificationCode"
+                    name="verificationCode" />
+            </div>
+
+            <div *ngIf="errorMessage" class="error-box">
+                {{ errorMessage }}
+            </div>
+
+            <div class="step-actions">
+                <button type="button" class="btn btn-outline-step" (click)="goBackToAccess()">
+                    Regresar
+                </button>
+
+                <button type="button" class="btn btn-login" (click)="validateVerificationCode()"
+                    [disabled]="validatingVerificationCode">
+                    {{ validatingVerificationCode ? 'Validando...' : 'Validar' }}
+                </button>
             </div>
         </div>
 
-        <div class="captcha-wrapper">
-            @if (loadingCaptcha) {
-            <div class="captcha-loading">Cargando captcha...</div>
-            } @else if (captchaImageSrc) {
-            <img class="captcha-image" [src]="captchaImageSrc" alt="Captcha" />
-            }
+        <!-- STEP 3: DONE -->
+        <div *ngSwitchCase="'done'" class="verification-step">
+            <div class="verification-title">Validacion completada</div>
+            <div class="verification-text">
+                El acceso fue validado correctamente.
+            </div>
 
-            <button type="button" class="refresh-link" (click)="loadCaptcha()">
-                Refrescar codigo
+            <button type="button" class="btn btn-login w-100" (click)="onModalAccept()">
+                Continuar
             </button>
         </div>
 
-        <div class="field-block">
-            <input id="captchaRespuesta" name="captchaRespuesta" type="text" class="field-input"
-                placeholder="Ingrese el codigo" [(ngModel)]="model.captchaRespuesta" />
-        </div>
-
-        @if (errorMessage) {
-        <div class="error-box">
-            {{ errorMessage }}
-        </div>
-        }
-
-        <button type="submit" class="btn btn-login w-100" [disabled]="submitting">
-            {{ submitting ? 'Procesando...' : 'Crear cuenta' }}
-        </button>
-    </form>
+    </ng-container>
 </app-auth-shell>
 
 <app-access-feedback-modal [isOpen]="modalState.isOpen" [variant]="modalState.variant" [message]="modalState.message"

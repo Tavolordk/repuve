@@ -23,6 +23,7 @@
   background: url('/images/angel.png') 34% center / 760px no-repeat;
   z-index: 1;
   pointer-events: none;
+  animation: angelFlyIn 1.4s ease-out forwards;
 }
 
 .auth-shell::after {
@@ -171,5 +172,24 @@
 
   .auth-shell__logo {
     max-width: 220px;
+  }
+}
+@keyframes angelFlyIn {
+  0% {
+    transform: translateX(-300px) translateY(80px) scale(0.8);
+    opacity: 0;
+  }
+
+  40% {
+    transform: translateX(-80px) translateY(-40px) scale(1.05);
+    opacity: 1;
+  }
+
+  70% {
+    transform: translateX(10px) translateY(10px) scale(0.98);
+  }
+
+  100% {
+    transform: translateX(0) translateY(0) scale(1);
   }
 }
