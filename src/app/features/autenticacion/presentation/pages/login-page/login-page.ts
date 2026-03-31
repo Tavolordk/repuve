@@ -223,8 +223,7 @@ export class LoginComponent implements OnInit, OnDestroy {
           fechaExpiracionUtc: response.fechaExpiracionUtc
         };
 
-        this.verificationCode = '';
-        this.verificationChannel = 'email';
+        this.openSuccessModal(response.mensaje);
         this.currentStep = 'verification-code';
         this.cdr.detectChanges();
       },
@@ -254,12 +253,12 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
   }
 
-  private openSuccessModal(maskedEmail: string): void {
+  private openSuccessModal(message: string): void {
     this.modalState = {
       isOpen: true,
       variant: 'success',
-      message: '',
-      emailMasked: maskedEmail
+      message,
+      emailMasked: ''
     };
   }
 
