@@ -1,17 +1,22 @@
-import { TestBed } from '@angular/core/testing';
 import { HttpInterceptorFn } from '@angular/common/http';
 
-import { authInterceptor } from './auth-interceptor';
+export const authInterceptor: HttpInterceptorFn = (req, next) => {
+  let token = localStorage.getItem('repuve_access_token');
+  let type = localStorage.getItem('repuve_token_type');
 
-describe('authInterceptor', () => {
-  const interceptor: HttpInterceptorFn = (req, next) => 
-    TestBed.runInInjectionContext(() => authInterceptor(req, next));
+  if (!token || !type) {
+    token = sessionStorage.getItem('activation_token');
+    type = 'Bearer';
+  }
 
-  beforeEach(() => {
-    TestBed.configureTestingModule({});
-  });
+  if (token && type) {
+    const cloned = req.clone({
+      setHeaders: {
+        Authorization: `${type} ${token}`
+      }
+    });
+    return next(cloned);
+  }
 
-  it('should be created', () => {
-    expect(interceptor).toBeTruthy();
-  });
-});
+  return next(req);
+};

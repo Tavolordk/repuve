@@ -1,8 +1,19 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
 import { LoginApiResponse, LoginFormEntity, LoginResponseEntity } from '../../domain/entities/login-form.entity';
 import { CaptchaApiResponse, CaptchaEntity } from '../../domain/entities/captcha.entity';
+import {
+  ActivationFlowApiResponse,
+  ActivationFlowRequestEntity,
+  ActivationFlowResponseEntity,
+  SendVerificationCodeApiResponse,
+  SendVerificationCodeRequestEntity,
+  SendVerificationCodeResponseEntity,
+  VerifyCodeApiResponse,
+  VerifyCodeRequestEntity,
+  VerifyCodeResponseEntity
+} from '../../domain/entities/verification.entity';
 import { API_CONFIG } from '../../../../core/config/app.config';
 
 @Injectable({
@@ -48,6 +59,101 @@ export class AuthApi {
             tipoToken: response.data.tipoToken,
             expiracionMinutos: response.data.expiracionMinutos,
             fechaExpiracionUtc: response.data.fechaExpiracionUtc
+          };
+        })
+      );
+  }
+
+  /**
+   * bearerToken: cuando se llama desde el flujo de activación se pasa
+   * explícitamente el token recién recibido de iniciarFlujoActivacion,
+   * sin depender del interceptor ni del sessionStorage.
+   */
+  sendVerificationCode(
+    request: SendVerificationCodeRequestEntity,
+    bearerToken?: string
+  ): Observable<SendVerificationCodeResponseEntity> {
+    const headers = bearerToken
+      ? new HttpHeaders({ Authorization: `Bearer ${bearerToken}` })
+      : undefined;
+
+    return this.http
+      .post<SendVerificationCodeApiResponse>(
+        `${this.baseUrl}/enviarCodigo`,
+        request,
+        headers ? { headers } : {}
+      )
+      .pipe(
+        map((response) => {
+          if (!response?.success || !response?.data) {
+            throw new Error(response?.mensaje || 'No se pudo enviar el código.');
+          }
+
+          return {
+            success: response.success,
+            mensaje: response.mensaje,
+            usuario: response.data.usuario,
+            canal: response.data.canal,
+            codigoEnviado: response.data.codigoEnviado
+          };
+        })
+      );
+  }
+
+  /**
+   * bearerToken: ídem — se pasa explícitamente desde el flujo de activación.
+   */
+  verifyCode(
+    request: VerifyCodeRequestEntity,
+    bearerToken?: string
+  ): Observable<VerifyCodeResponseEntity> {
+    const headers = bearerToken
+      ? new HttpHeaders({ Authorization: `Bearer ${bearerToken}` })
+      : undefined;
+
+    return this.http
+      .post<VerifyCodeApiResponse>(
+        `${this.baseUrl}/verificarCodigo`,
+        request,
+        headers ? { headers } : {}
+      )
+      .pipe(
+        map((response) => {
+          if (!response?.success || !response?.data) {
+            throw new Error(response?.mensaje || 'No se pudo verificar el código.');
+          }
+
+          return {
+            success: response.success,
+            mensaje: response.mensaje,
+            usuario: response.data.usuario,
+            codigoVerificado: response.data.codigoVerificado,
+            fechaExpiracionUtc: response.data.fechaExpiracionUtc
+          };
+        })
+      );
+  }
+
+  startActivationFlow(
+    request: ActivationFlowRequestEntity
+  ): Observable<ActivationFlowResponseEntity> {
+    return this.http
+      .post<ActivationFlowApiResponse>(`${this.baseUrl}/iniciarFlujoActivacion`, request)
+      .pipe(
+        map((response) => {
+          if (!response?.success || !response?.data?.token) {
+            throw new Error(response?.mensaje || 'No se pudo activar la cuenta.');
+          }
+
+          return {
+            success: response.success,
+            mensaje: response.mensaje,
+            usuario: response.data.usuario,
+            token: response.data.token,
+            tipoToken: response.data.tipoToken,
+            expiracionMinutos: response.data.expiracionMinutos,
+            fechaExpiracionUtc: response.data.fechaExpiracionUtc,
+            flujoActivacionIniciado: response.data.flujoActivacionIniciado
           };
         })
       );

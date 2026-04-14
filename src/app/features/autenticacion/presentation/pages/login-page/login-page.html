@@ -3,7 +3,6 @@
 
     <ng-container [ngSwitch]="currentStep">
 
-        <!-- STEP 1: ACCESS -->
         <form *ngSwitchCase="'access'" class="login-form" (ngSubmit)="submit()">
             <div class="field-block">
                 <label class="field-label" for="usuario">Cuenta de usuario</label>
@@ -62,7 +61,6 @@
             </button>
         </form>
 
-        <!-- STEP 2: VERIFICATION CODE -->
         <div *ngSwitchCase="'verification-code'" class="verification-step">
             <div class="verification-user">
                 <div class="field-block compact">
@@ -97,16 +95,38 @@
                 </span>
             </div>
 
+            <div class="captcha-wrapper compact-captcha">
+                <div *ngIf="loadingCaptcha" class="captcha-loading">Cargando captcha...</div>
+
+                <ng-container *ngIf="!loadingCaptcha && captchaImageSrc">
+                    <img class="captcha-image" [src]="captchaImageSrc" alt="Captcha" />
+                    <div class="captcha-expiry">Expira en: {{ captchaTimeLabel }}</div>
+                </ng-container>
+
+                <div *ngIf="captchaExpired && !loadingCaptcha" class="captcha-expired">
+                    El captcha expiró. Solicita uno nuevo.
+                </div>
+
+                <button type="button" class="refresh-link" (click)="loadCaptcha()" [disabled]="loadingCaptcha">
+                    {{ loadingCaptcha ? 'Cargando...' : 'Refrescar codigo' }}
+                </button>
+            </div>
+
+            <div class="field-block compact">
+                <input type="text" class="field-input" placeholder="Captcha" [(ngModel)]="model.captchaRespuesta"
+                    name="captchaRespuestaStep2" [disabled]="loadingCaptcha || captchaExpired || !model.captchaId" />
+            </div>
+
             <div class="verification-actions">
                 <button type="button" class="btn btn-secondary-action" (click)="sendVerificationCode()"
-                    [disabled]="sendingVerificationCode">
-                    {{ sendingVerificationCode ? 'Enviando...' : 'Enviar' }}
+                    [disabled]="sendingVerificationCode || loadingCaptcha || captchaExpired || !model.captchaId">
+                    {{ sendingVerificationCode ? 'Enviando...' : 'Enviar codigo' }}
                 </button>
             </div>
 
             <div class="field-block">
-                <input type="text" class="field-input" placeholder="Ingrese el codigo" [(ngModel)]="verificationCode"
-                    name="verificationCode" />
+                <input type="text" class="field-input verification-code-input" placeholder="Ingrese el codigo"
+                    maxlength="6" [(ngModel)]="verificationCode" name="verificationCode" />
             </div>
 
             <div *ngIf="errorMessage" class="error-box">
@@ -125,16 +145,18 @@
             </div>
         </div>
 
-        <!-- STEP 3: DONE -->
         <div *ngSwitchCase="'done'" class="verification-step">
-            <div class="verification-title">Validacion completada</div>
-            <div class="verification-text">
+            <div class="verification-title">Proceso iniciado correctamente</div>
+
+            <div class="verification-text" *ngIf="showCloseTabMessage">
+                Ya puedes cerrar esta pestaña, tus datos fueron enviados por correo.
+            </div>
+
+            <div class="verification-text" *ngIf="!showCloseTabMessage">
                 El acceso fue validado correctamente.
             </div>
 
-            <button type="button" class="btn btn-login w-100" (click)="onModalAccept()">
-                Continuar
-            </button>
+
         </div>
 
     </ng-container>

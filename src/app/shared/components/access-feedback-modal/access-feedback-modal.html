@@ -13,7 +13,7 @@
         }
 
         <div class="access-modal-body">
-            @if (isSuccess) {
+            @if (isSuccess && emailMasked) {
             <p class="access-modal-message">
                 Enviamos un enlace a
                 <strong>{{ emailMasked }}</strong>

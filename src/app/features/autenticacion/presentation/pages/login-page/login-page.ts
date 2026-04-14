@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { Subscription, finalize, timeout } from 'rxjs';
 
 import { AuthShellComponent } from '../../../../../shared/layouts/auth-shell/auth-shell.component';
@@ -27,10 +28,12 @@ import { AuthSessionService } from '../../../infrastructure/services/auth-sessio
 export class LoginComponent implements OnInit, OnDestroy {
   private readonly authFacade = inject(AuthFacade);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly router = inject(Router);
+  private readonly authSessionService = inject(AuthSessionService);
+  showCloseTabMessage = false;
   private captchaSubscription?: Subscription;
   private countdownIntervalId: ReturnType<typeof setInterval> | null = null;
   private captchaRequestVersion = 0;
-  private readonly authSessionService = inject(AuthSessionService);
 
   currentStep: 'access' | 'verification-code' | 'done' = 'access';
 
@@ -49,11 +52,6 @@ export class LoginComponent implements OnInit, OnDestroy {
     fechaExpiracionUtc: ''
   };
 
-  verificationData = {
-    token: '',
-    expiracionMinutos: 0,
-    fechaExpiracionUtc: ''
-  };
   model: LoginFormEntity = {
     usuario: '',
     correoElectronico: '',
@@ -90,19 +88,14 @@ export class LoginComponent implements OnInit, OnDestroy {
   loadCaptcha(): void {
     const currentVersion = ++this.captchaRequestVersion;
 
-    // cancelar petición anterior
     this.captchaSubscription?.unsubscribe();
-
-    // detener timer anterior
     this.stopCountdown();
 
-    // limpiar estado viejo
     this.loadingCaptcha = true;
     this.errorMessage = '';
     this.captchaExpired = false;
     this.captchaTtlSeconds = 0;
 
-    // invalida el captcha anterior
     this.model.captchaId = '';
     this.model.captchaRespuesta = '';
     this.captchaImageSrc = '';
@@ -113,7 +106,6 @@ export class LoginComponent implements OnInit, OnDestroy {
       .pipe(
         timeout(15000),
         finalize(() => {
-          // solo la última petición puede apagar loading
           if (currentVersion === this.captchaRequestVersion) {
             this.loadingCaptcha = false;
             this.cdr.detectChanges();
@@ -122,7 +114,6 @@ export class LoginComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: (captcha) => {
-          // ignora respuestas viejas
           if (currentVersion !== this.captchaRequestVersion) {
             return;
           }
@@ -134,23 +125,17 @@ export class LoginComponent implements OnInit, OnDestroy {
           this.captchaExpired = false;
 
           this.startCountdown();
-
-          console.log('captcha nuevo:', this.model.captchaId);
-          console.log('ttl:', this.captchaTtlSeconds);
-
           this.cdr.detectChanges();
         },
-        error: (error) => {
+        error: () => {
           if (currentVersion !== this.captchaRequestVersion) {
             return;
           }
 
-          console.error('Error cargando captcha:', error);
           this.errorMessage = 'No se pudo cargar el captcha.';
           this.captchaImageSrc = '';
           this.model.captchaId = '';
           this.captchaExpired = true;
-
           this.cdr.detectChanges();
         }
       });
@@ -223,8 +208,10 @@ export class LoginComponent implements OnInit, OnDestroy {
           fechaExpiracionUtc: response.fechaExpiracionUtc
         };
 
-        this.openSuccessModal(response.mensaje);
-        this.currentStep = 'verification-code';
+        this.openSuccessModal(
+          response.mensaje || 'Enviamos un enlace a tu correo para continuar.'
+        );
+
         this.cdr.detectChanges();
       },
       error: (error) => {
@@ -241,16 +228,13 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   closeModal(): void {
-    this.modalState.isOpen = false;
+    if (!this.modalState.isOpen) return;
+
+    this.openActivationTabAndShowCloseMessage();
   }
 
   onModalAccept(): void {
-    const currentVariant = this.modalState.variant;
-    this.closeModal();
-
-    if (currentVariant === 'success') {
-      console.log('Continuar flujo despues del alta o envio de enlace');
-    }
+    this.openActivationTabAndShowCloseMessage();
   }
 
   private openSuccessModal(message: string): void {
@@ -258,7 +242,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       isOpen: true,
       variant: 'success',
       message,
-      emailMasked: ''
+      emailMasked: this.maskEmail(this.model.correoElectronico)
     };
   }
 
@@ -290,22 +274,54 @@ export class LoginComponent implements OnInit, OnDestroy {
 
     return `${localPart[0]}*****${localPart[localPart.length - 1]}@${domain}`;
   }
+
   selectVerificationChannel(channel: 'email' | 'telegram'): void {
     this.verificationChannel = channel;
+    this.errorMessage = '';
   }
 
   sendVerificationCode(): void {
     if (this.sendingVerificationCode) return;
 
+    if (!this.verificationStepData.usuario.trim()) {
+      this.errorMessage = 'No se encontró el usuario para enviar el código.';
+      return;
+    }
+
+    if (!this.model.captchaId || this.captchaExpired) {
+      this.errorMessage = 'El captcha actual expiró. Refresca el captcha antes de enviar el código.';
+      return;
+    }
+
     this.errorMessage = '';
     this.sendingVerificationCode = true;
 
-    // TODO: integrar endpoint real de envío de código
-    setTimeout(() => {
-      this.sendingVerificationCode = false;
-      console.log('Código enviado por:', this.verificationChannel);
-      this.cdr.detectChanges();
-    }, 800);
+    this.authFacade.sendVerificationCode({
+      usuario: this.verificationStepData.usuario,
+      correoElectronico: this.verificationStepData.correoElectronico || null,
+      numeroCelular: this.verificationStepData.numeroCelular || null,
+      medioContacto: this.verificationChannel === 'email' ? 'correo' : 'telegram',
+      captchaId: this.model.captchaId,
+      captchaRespuesta: this.model.captchaRespuesta
+    }).pipe(
+      timeout(15000),
+      finalize(() => {
+        this.sendingVerificationCode = false;
+        this.cdr.detectChanges();
+      })
+    ).subscribe({
+      next: (response) => {
+        this.openSuccessModal(response.mensaje || 'El código de verificación fue enviado correctamente.');
+        this.loadCaptcha();
+      },
+      error: (error) => {
+        this.errorMessage =
+          error?.error?.mensaje ||
+          error?.message ||
+          'No se pudo enviar el código de verificación.';
+        this.loadCaptcha();
+      }
+    });
   }
 
   validateVerificationCode(): void {
@@ -319,18 +335,50 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.errorMessage = '';
     this.validatingVerificationCode = true;
 
-    // TODO: integrar endpoint real para validar código
-    setTimeout(() => {
-      this.validatingVerificationCode = false;
-      this.currentStep = 'done';
-      this.cdr.detectChanges();
-    }, 800);
+    this.authFacade.verifyCode({
+      usuario: this.verificationStepData.usuario,
+      codigo: this.verificationCode.trim(),
+      medioContacto: this.verificationChannel === 'email' ? 'correo' : 'telegram'
+    }).pipe(
+      timeout(15000),
+      finalize(() => {
+        this.validatingVerificationCode = false;
+        this.cdr.detectChanges();
+      })
+    ).subscribe({
+      next: (response) => {
+        if (!response.codigoVerificado) {
+          this.errorMessage = response.mensaje || 'El código no pudo ser validado.';
+          return;
+        }
+
+        this.currentStep = 'done';
+        this.openSuccessModal(response.mensaje || 'La validación se realizó correctamente.');
+      },
+      error: (error) => {
+        this.errorMessage =
+          error?.error?.mensaje ||
+          error?.message ||
+          'No se pudo validar el código.';
+      }
+    });
   }
 
   goBackToAccess(): void {
     this.currentStep = 'access';
     this.verificationCode = '';
     this.errorMessage = '';
+    this.loadCaptcha();
+    this.cdr.detectChanges();
+  }
+
+  goToLogin(): void {
+    this.router.navigate(['/login']);
+  }
+  openActivationTabAndShowCloseMessage(): void {
+    this.showCloseTabMessage = true;
+    this.currentStep = 'done';
+    this.modalState.isOpen = false;
     this.cdr.detectChanges();
   }
 }

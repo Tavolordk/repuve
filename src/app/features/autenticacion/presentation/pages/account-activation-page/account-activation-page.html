@@ -1,0 +1,97 @@
+<app-auth-shell [logoSrc]="'images/GOBMX.png'" [title]="'Registro Público Vehicular<br>REPUVE'"
+    [subtitle]="'Sujetos obligados'">
+
+    <!-- LOADING -->
+    <div *ngIf="step === 'loading'" class="verification-step">
+        <div class="verification-title">Procesando</div>
+        <p class="verification-text">Espera un momento mientras validamos tu enlace...</p>
+    </div>
+
+    <!-- VERIFY CODE -->
+    <div *ngIf="step === 'verify-code'" class="verification-step">
+
+        <div class="field-block compact">
+            <label class="field-label">Cuenta de usuario</label>
+            <input type="text" class="field-input" [value]="usuario" readonly />
+        </div>
+
+        <div class="verification-section-title">
+            Enviar código de verificación
+        </div>
+
+        <div class="channel-selector">
+            <button type="button" class="channel-btn" [class.active]="verificationChannel === 'email'"
+                (click)="selectChannel('email')">
+                Correo electrónico
+            </button>
+            <button type="button" class="channel-btn" [class.active]="verificationChannel === 'telegram'"
+                (click)="selectChannel('telegram')">
+                Telegram
+            </button>
+        </div>
+
+        <div class="captcha-wrapper compact-captcha">
+            <div *ngIf="loadingCaptcha" class="captcha-loading">Cargando captcha...</div>
+
+            <ng-container *ngIf="!loadingCaptcha && captchaImageSrc">
+                <img class="captcha-image" [src]="captchaImageSrc" alt="Captcha" />
+                <div class="captcha-expiry">Expira en: {{ captchaTimeLabel }}</div>
+            </ng-container>
+
+            <div *ngIf="captchaExpired && !loadingCaptcha" class="captcha-expired">
+                El captcha expiró. Solicita uno nuevo.
+            </div>
+
+            <button type="button" class="refresh-link" (click)="loadCaptcha()" [disabled]="loadingCaptcha">
+                {{ loadingCaptcha ? 'Cargando...' : 'Refrescar código' }}
+            </button>
+        </div>
+
+        <div class="field-block compact">
+            <input type="text" class="field-input" placeholder="Captcha" [(ngModel)]="captchaRespuesta"
+                name="captchaRespuesta" [disabled]="loadingCaptcha || captchaExpired || !captchaId" />
+        </div>
+
+        <div class="verification-actions">
+            <button type="button" class="btn btn-secondary-action" (click)="sendCode()"
+                [disabled]="sendingCode || loadingCaptcha || captchaExpired || !captchaId">
+                {{ sendingCode ? 'Enviando...' : 'Enviar código' }}
+            </button>
+        </div>
+
+        <div class="field-block">
+            <input type="text" class="field-input verification-code-input" placeholder="Ingrese el código" maxlength="6"
+                [(ngModel)]="verificationCode" name="verificationCode" />
+        </div>
+
+        <div *ngIf="errorMessage" class="error-box">{{ errorMessage }}</div>
+        <div *ngIf="successMessage" class="success-box">{{ successMessage }}</div>
+
+        <div class="step-actions">
+            <button type="button" class="btn btn-login" (click)="validateCode()"
+                [disabled]="validating || verificationCode.length < 6">
+                {{ validating ? 'Validando...' : 'Validar' }}
+            </button>
+        </div>
+
+    </div>
+
+    <!-- DONE -->
+    <div *ngIf="step === 'done'" class="verification-step">
+        <div class="verification-title">¡Cuenta activada!</div>
+        <p class="verification-text">
+            Su cuenta ha sido activada correctamente.<br>
+            Ya puede cerrar esta pestaña.
+        </p>
+        <p class="verification-text" style="font-size: 0.88rem; color: #888;">
+            Se le ha enviado el enlace de acceso a su correo electrónico registrado.
+        </p>
+    </div>
+
+    <!-- ERROR -->
+    <div *ngIf="step === 'error'" class="verification-step">
+        <div class="verification-title">Activación fallida</div>
+        <p class="verification-text" style="color: #b42318; font-weight: 700;">{{ errorMessage }}</p>
+    </div>
+
+</app-auth-shell>
