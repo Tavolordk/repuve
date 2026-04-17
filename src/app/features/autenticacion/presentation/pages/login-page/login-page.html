@@ -6,23 +6,31 @@
         <form *ngSwitchCase="'access'" class="login-form" (ngSubmit)="submit()">
             <div class="field-block">
                 <label class="field-label" for="usuario">Cuenta de usuario</label>
-                <input id="usuario" name="usuario" type="text" class="field-input" [(ngModel)]="model.usuario" />
-            </div>
-
-            <div class="field-block">
-                <label class="field-label" for="correoElectronico">Correo</label>
-                <input id="correoElectronico" name="correoElectronico" type="email" class="field-input"
-                    [(ngModel)]="model.correoElectronico" />
-            </div>
-
-            <div class="field-block">
-                <label class="field-label" for="numeroCelular">Numero de celular</label>
-                <div class="phone-row">
-                    <div class="phone-prefix">+52</div>
-                    <input id="numeroCelular" name="numeroCelular" type="text" class="phone-input"
-                        [(ngModel)]="model.numeroCelular" />
+                <input id="usuario" name="usuario" type="text" class="field-input" [(ngModel)]="model.usuario"
+                    (ngModelChange)="onUsuarioChange($event)" />
+                <!-- Page 7: show validated state when user length matches and validated -->
+                <div *ngIf="isExistingUserFlow && userValidated" class="user-validated-hint">
+                    ✅ Usuario validado
                 </div>
             </div>
+
+            <!-- Page 7: hide correo y numero de celular cuando es flujo de usuario existente -->
+            <ng-container *ngIf="!isExistingUserFlow">
+                <div class="field-block">
+                    <label class="field-label" for="correoElectronico">Correo</label>
+                    <input id="correoElectronico" name="correoElectronico" type="email" class="field-input"
+                        [(ngModel)]="model.correoElectronico" />
+                </div>
+
+                <div class="field-block">
+                    <label class="field-label" for="numeroCelular">Numero de celular</label>
+                    <div class="phone-row">
+                        <div class="phone-prefix">+52</div>
+                        <input id="numeroCelular" name="numeroCelular" type="text" class="phone-input"
+                            [(ngModel)]="model.numeroCelular" />
+                    </div>
+                </div>
+            </ng-container>
 
             <div class="captcha-wrapper">
                 <div *ngIf="loadingCaptcha" class="captcha-loading">
@@ -55,9 +63,10 @@
                 {{ errorMessage }}
             </div>
 
+            <!-- Page 7: button label changes based on flow -->
             <button type="submit" class="btn btn-login w-100"
                 [disabled]="submitting || loadingCaptcha || captchaExpired || !model.captchaId">
-                {{ submitting ? 'Procesando...' : 'Crear cuenta' }}
+                {{ submitting ? 'Procesando...' : (isExistingUserFlow ? 'Validar usuario' : 'Crear cuenta') }}
             </button>
         </form>
 
@@ -68,6 +77,12 @@
                     <input type="text" class="field-input" [ngModel]="verificationStepData.usuario" name="usuarioStep2"
                         readonly />
                 </div>
+            </div>
+
+            <!-- Page 8: guidance text highlighted -->
+            <div class="verification-guide">
+                <strong>Verificación de cuenta.</strong> Ingresa el usuario que recibiste en tu correo electrónico
+                y selecciona el medio por el que deseas recibir tu código de verificación.
             </div>
 
             <div class="verification-section-title">
@@ -86,12 +101,15 @@
                 </button>
             </div>
 
-            <div class="channel-hint">
+            <!-- Page 9: mensajes según canal después de enviar código -->
+            <div class="channel-hint" *ngIf="verificationCodeSent">
                 <span *ngIf="verificationChannel === 'email'">
-                    Se enviará al correo {{ verificationStepData.correoElectronico }}
+                    Hemos enviado un código de verificación a
+                    <strong>{{ maskedContact }}</strong>. Ingrésalo para continuar con el proceso.
                 </span>
                 <span *ngIf="verificationChannel === 'telegram'">
-                    Se enviará al numero {{ verificationStepData.numeroCelular }}
+                    Hemos enviado un código de verificación al número
+                    <strong>{{ maskedContact }}</strong> vía Telegram. Ingrésalo para continuar con el proceso.
                 </span>
             </div>
 
@@ -145,18 +163,20 @@
             </div>
         </div>
 
+        <!-- Page 3: redesigned "Proceso iniciado correctamente" panel -->
         <div *ngSwitchCase="'done'" class="verification-step">
-            <div class="verification-title">Proceso iniciado correctamente</div>
-
-            <div class="verification-text" *ngIf="showCloseTabMessage">
-                Ya puedes cerrar esta pestaña, tus datos fueron enviados por correo.
+            <div class="verification-title success-title">
+                <span class="success-icon" aria-hidden="true">✅</span>
+                Proceso iniciado correctamente
             </div>
 
-            <div class="verification-text" *ngIf="!showCloseTabMessage">
-                El acceso fue validado correctamente.
-            </div>
+            <p class="verification-text">
+                Tus datos han sido registrados y recibirás un correo electrónico con los detalles del proceso.
+            </p>
 
-
+            <p class="verification-text muted">
+                Puedes cerrar esta pestaña de forma segura.
+            </p>
         </div>
 
     </ng-container>

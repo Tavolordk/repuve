@@ -3,6 +3,7 @@
 }
 
 .auth-shell {
+  height: 100vh;
   min-height: 100vh;
   position: relative;
   overflow: hidden;
@@ -16,11 +17,21 @@
     url('/images/background_av.jpg') center center / cover no-repeat;
 }
 
+.auth-shell__row {
+  height: 100vh;
+  min-height: 100vh;
+}
+
+.auth-shell__col {
+  height: 100vh;
+  min-height: 100vh;
+}
+
 .auth-shell::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: url('/images/angel.png') 34% center / 760px no-repeat;
+  background: url('/images/angel.png') 44% center / auto 92vh no-repeat;
   z-index: 1;
   pointer-events: none;
   animation: angelFlyIn 1.4s ease-out forwards;
@@ -40,55 +51,97 @@
   pointer-events: none;
 }
 
+.auth-shell__angel-mobile {
+  display: none;
+}
+
 .auth-shell__panel {
   width: 100%;
+  height: 100%;
   max-width: none;
-  padding: 2rem 3rem 2rem 4.5rem;
+  padding: 1.25rem 3rem 1.25rem 4.5rem;
   border-radius: 34px 0 0 34px;
   background: rgba(245, 245, 245, 0.64);
   backdrop-filter: blur(3px);
   -webkit-backdrop-filter: blur(3px);
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .auth-shell__logo {
-  max-width: 360px;
+  max-width: 280px;
+  width: 100%;
+  height: auto;
 }
 
 .auth-shell__title {
-  font-size: 2.1rem;
+  font-size: 1.75rem;
   line-height: 1.18;
   color: #111;
+  margin-bottom: 0.35rem !important;
 }
 
 .auth-shell__subtitle {
-  font-size: 1.15rem;
+  font-size: 1rem;
   color: #111;
+  margin-bottom: 0.75rem;
 }
 
 @media (max-width: 1399.98px) {
   .auth-shell::before {
-    background-size: 690px;
-    background-position: 31% center;
+    background-size: auto 88vh;
+    background-position: 41% center;
+  }
+
+  .auth-shell__panel {
+    padding: 1rem 2rem 1rem 2.5rem;
+  }
+
+  .auth-shell__logo {
+    max-width: 230px;
+  }
+
+  .auth-shell__title {
+    font-size: 1.5rem;
+  }
+
+  .auth-shell__subtitle {
+    font-size: 0.95rem;
   }
 }
 
 @media (max-width: 1199.98px) {
   .auth-shell::before {
-    background-size: 620px;
-    background-position: 28% center;
+    background-size: auto 82vh;
+    background-position: 38% center;
   }
 
   .auth-shell__panel {
     max-width: 520px;
-    padding: 1.6rem 1.8rem 1.8rem;
+    padding: 1rem 1.5rem;
+  }
+
+  .auth-shell__logo {
+    max-width: 210px;
   }
 
   .auth-shell__title {
-    font-size: 1.9rem;
+    font-size: 1.4rem;
   }
 }
 
 @media (max-width: 991.98px) {
+  .auth-shell {
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .auth-shell__row,
+  .auth-shell__col {
+    height: auto;
+    min-height: 100vh;
+  }
+
   .auth-shell {
     background:
       linear-gradient(
@@ -100,51 +153,35 @@
       url('/images/background_av.jpg') center center / cover no-repeat;
   }
 
+  /* Ocultar el ángel de fondo y mostrar el banner del ángel arriba del formulario */
   .auth-shell::before {
-    background-size: 420px;
-    background-position: center 18%;
-    opacity: 0.95;
+    display: none;
+  }
+
+  .auth-shell__angel-mobile {
+    display: block;
+    width: 100%;
+    height: 280px;
+    background: url('/images/angel.png') center bottom / contain no-repeat;
+    flex-shrink: 0;
+    animation: angelFlyIn 1.4s ease-out forwards;
   }
 
   .auth-shell__panel {
     max-width: 100%;
     margin: 0;
-    border-radius: 28px;
-    background: rgba(245, 245, 245, 0.72);
-  }
-
-  .auth-shell__logo {
-    max-width: 320px;
-  }
-
-  .auth-shell__title {
-    font-size: 1.7rem;
-  }
-
-  .auth-shell__subtitle {
-    font-size: 1.05rem;
-  }
-}
-
-@media (max-width: 767.98px) {
-  .auth-shell::before {
-    background-size: 320px;
-    background-position: center 11%;
-    opacity: 0.88;
-  }
-
-  .auth-shell__panel {
-    padding: 1.25rem 1rem 1.5rem;
-    border-radius: 22px;
+    border-radius: 28px 28px 0 0;
     background: rgba(245, 245, 245, 0.78);
+    padding: 1rem 1.25rem 1.25rem;
+    overflow-y: visible;
   }
 
   .auth-shell__logo {
-    max-width: 250px;
+    max-width: 200px;
   }
 
   .auth-shell__title {
-    font-size: 1.35rem;
+    font-size: 1.4rem;
   }
 
   .auth-shell__subtitle {
@@ -152,14 +189,19 @@
   }
 }
 
-@media (max-width: 575.98px) {
-  .auth-shell::before {
-    background-size: 280px;
-    background-position: center 10%;
+@media (max-width: 767.98px) {
+  .auth-shell__angel-mobile {
+    height: 220px;
   }
 
   .auth-shell__panel {
-    padding: 1.1rem 0.85rem 1.35rem;
+    padding: 0.85rem 0.9rem 1rem;
+    border-radius: 22px 22px 0 0;
+    background: rgba(245, 245, 245, 0.82);
+  }
+
+  .auth-shell__logo {
+    max-width: 170px;
   }
 
   .auth-shell__title {
@@ -167,11 +209,30 @@
   }
 
   .auth-shell__subtitle {
-    font-size: 0.9rem;
+    font-size: 0.88rem;
+    margin-bottom: 0.5rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .auth-shell__angel-mobile {
+    height: 180px;
+  }
+
+  .auth-shell__panel {
+    padding: 0.75rem 0.75rem 0.9rem;
+  }
+
+  .auth-shell__title {
+    font-size: 1.1rem;
+  }
+
+  .auth-shell__subtitle {
+    font-size: 0.85rem;
   }
 
   .auth-shell__logo {
-    max-width: 220px;
+    max-width: 150px;
   }
 }
 @keyframes angelFlyIn {

@@ -13,6 +13,22 @@ import {
 } from '../../../../../shared/components/access-feedback-modal/access-feedback-modal';
 import { AuthSessionService } from '../../../infrastructure/services/auth-session.service';
 
+/**
+ * Longitud esperada de la cuenta que se envía por correo al crear una nueva cuenta.
+ * Cuando el usuario escribe un valor de esta longitud asumimos que está validando
+ * un usuario existente (proveniente del correo) y se oculta correo/celular.
+ */
+const EXISTING_USER_ACCOUNT_LENGTH = 14;
+
+/**
+ * Razones internas que controlan qué debe pasar cuando el usuario cierra el modal.
+ *  - 'success-new-account' → se creó una nueva cuenta: mostrar pantalla "Proceso iniciado"
+ *  - 'user-validated'      → validación de usuario existente: pasar a verification-code
+ *  - 'error' | 'info'      → no cambiar de pantalla, solo cerrar el modal (bug reportado
+ *                            en Página 4: antes siempre se iba a "Proceso iniciado")
+ */
+type ModalIntent = 'success-new-account' | 'user-validated' | 'error' | 'info';
+
 @Component({
   selector: 'app-login',
   standalone: true,
@@ -39,9 +55,15 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   verificationChannel: 'email' | 'telegram' = 'email';
   verificationCode = '';
+  verificationCodeSent = false;
+  maskedContact = '';
 
   sendingVerificationCode = false;
   validatingVerificationCode = false;
+
+  // Página 7: bandera que indica si el usuario capturado proviene del correo
+  isExistingUserFlow = false;
+  userValidated = false;
 
   verificationStepData = {
     usuario: '',
@@ -72,7 +94,8 @@ export class LoginComponent implements OnInit, OnDestroy {
     isOpen: false,
     variant: 'success' as AccessFeedbackModalVariant,
     message: '',
-    emailMasked: ''
+    emailMasked: '',
+    intent: 'info' as ModalIntent
   };
 
   ngOnInit(): void {
@@ -83,6 +106,26 @@ export class LoginComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.captchaSubscription?.unsubscribe();
     this.stopCountdown();
+  }
+
+  /**
+   * Página 7: al escribir el usuario, si la longitud coincide con la de una cuenta
+   * recibida por correo, se activa el flujo de "validar usuario existente":
+   * se ocultan correo y celular y cambia el botón a "Validar usuario".
+   */
+  onUsuarioChange(value: string): void {
+    const trimmed = (value ?? '').trim();
+    const matchesExistingAccountLength = trimmed.length === EXISTING_USER_ACCOUNT_LENGTH;
+
+    if (matchesExistingAccountLength !== this.isExistingUserFlow) {
+      this.isExistingUserFlow = matchesExistingAccountLength;
+      this.userValidated = false;
+      if (this.isExistingUserFlow) {
+        // Ya no son necesarios al validar usuario existente
+        this.model.correoElectronico = '';
+        this.model.numeroCelular = '';
+      }
+    }
   }
 
   loadCaptcha(): void {
@@ -189,6 +232,12 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.errorMessage = '';
     this.submitting = true;
 
+    // Página 7: si es flujo de validación de usuario existente, se usa un camino distinto.
+    if (this.isExistingUserFlow) {
+      this.validateExistingUser();
+      return;
+    }
+
     this.authFacade.login(this.model).pipe(
       timeout(15000),
       finalize(() => {
@@ -208,8 +257,10 @@ export class LoginComponent implements OnInit, OnDestroy {
           fechaExpiracionUtc: response.fechaExpiracionUtc
         };
 
+        // Página 2: mensaje con mejor redacción (se arma en la propia modal).
         this.openSuccessModal(
-          response.mensaje || 'Enviamos un enlace a tu correo para continuar.'
+          response.mensaje || 'Enviamos un enlace de verificación a tu correo para activar tu nueva cuenta.',
+          'success-new-account'
         );
 
         this.cdr.detectChanges();
@@ -221,6 +272,51 @@ export class LoginComponent implements OnInit, OnDestroy {
           error?.message ||
           'No se pudo completar la solicitud.';
 
+        // Página 4: mensaje de error cuando no existe la cuenta (el modal se encarga del texto detallado).
+        this.openErrorModal(backendMessage);
+        this.loadCaptcha();
+      }
+    });
+  }
+
+  /**
+   * Página 7: al dar clic en "Validar usuario" se confirma que la cuenta existe;
+   * al aceptar el modal se navega automáticamente a verification-code (Página 8).
+   */
+  private validateExistingUser(): void {
+    // TODO(backend): reemplazar por un endpoint real de validación de usuario si existe.
+    // De momento reutilizamos el método existente para no romper la integración.
+    this.authFacade.login(this.model).pipe(
+      timeout(15000),
+      finalize(() => {
+        this.submitting = false;
+        this.cdr.detectChanges();
+      })
+    ).subscribe({
+      next: (response) => {
+        this.authSessionService.saveSession(response);
+
+        // En el flujo de "validar usuario existente" correo y celular no se capturan
+        // en el front; el backend los resolverá al enviar el código de verificación.
+        this.verificationStepData = {
+          usuario: this.model.usuario,
+          correoElectronico: '',
+          numeroCelular: '',
+          token: response.token,
+          expiracionMinutos: response.expiracionMinutos,
+          fechaExpiracionUtc: response.fechaExpiracionUtc
+        };
+
+        this.userValidated = true;
+        this.openUserValidatedModal();
+      },
+      error: (error) => {
+        const backendMessage =
+          error?.error?.message ||
+          error?.error?.mensaje ||
+          error?.message ||
+          'No se pudo validar el usuario.';
+
         this.openErrorModal(backendMessage);
         this.loadCaptcha();
       }
@@ -230,19 +326,56 @@ export class LoginComponent implements OnInit, OnDestroy {
   closeModal(): void {
     if (!this.modalState.isOpen) return;
 
-    this.openActivationTabAndShowCloseMessage();
+    // Página 4 — Bug corregido:
+    // antes se llamaba a openActivationTabAndShowCloseMessage() en toda ocasión,
+    // lo que mostraba la pantalla "Proceso iniciado correctamente" aun cuando la modal
+    // era un error. Ahora la acción depende del `intent` de la modal.
+    this.handleModalDismiss();
   }
 
   onModalAccept(): void {
-    this.openActivationTabAndShowCloseMessage();
+    this.handleModalDismiss();
   }
 
-  private openSuccessModal(message: string): void {
+  private handleModalDismiss(): void {
+    const intent = this.modalState.intent;
+
+    // Cerrar siempre el modal
+    this.modalState.isOpen = false;
+
+    switch (intent) {
+      case 'success-new-account':
+        // Mostrar la pantalla "Proceso iniciado correctamente" (Página 3).
+        this.showCloseTabMessage = true;
+        this.currentStep = 'done';
+        break;
+
+      case 'user-validated':
+        // Página 8: ir automáticamente a la pantalla de código de verificación.
+        this.verificationCode = '';
+        this.verificationCodeSent = false;
+        this.maskedContact = '';
+        this.currentStep = 'verification-code';
+        this.loadCaptcha();
+        break;
+
+      case 'error':
+      case 'info':
+      default:
+        // Bug Página 4: NO navegar, solo cerrar la modal y permanecer en Login.
+        break;
+    }
+
+    this.cdr.detectChanges();
+  }
+
+  private openSuccessModal(message: string, intent: ModalIntent = 'info'): void {
     this.modalState = {
       isOpen: true,
       variant: 'success',
       message,
-      emailMasked: this.maskEmail(this.model.correoElectronico)
+      emailMasked: this.maskEmail(this.model.correoElectronico),
+      intent
     };
   }
 
@@ -251,7 +384,19 @@ export class LoginComponent implements OnInit, OnDestroy {
       isOpen: true,
       variant: 'error',
       message,
-      emailMasked: ''
+      emailMasked: '',
+      intent: 'error'
+    };
+  }
+
+  /** Página 7: modal "✅ Usuario válido" con botón Aceptar. */
+  private openUserValidatedModal(): void {
+    this.modalState = {
+      isOpen: true,
+      variant: 'success',
+      message: '✅ Usuario válido',
+      emailMasked: '',
+      intent: 'user-validated'
     };
   }
 
@@ -273,6 +418,17 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
 
     return `${localPart[0]}*****${localPart[localPart.length - 1]}@${domain}`;
+  }
+
+  /** Página 9: enmascara un número de teléfono manteniendo primeros 2 y últimos 2 dígitos. */
+  private maskPhone(phone: string): string {
+    const digits = (phone ?? '').replace(/\D/g, '');
+    if (!digits) return '';
+    if (digits.length <= 4) return digits;
+    const start = digits.slice(0, 2);
+    const end = digits.slice(-2);
+    const middleMask = '*'.repeat(Math.max(4, digits.length - 4));
+    return `${start}${middleMask}${end}`;
   }
 
   selectVerificationChannel(channel: 'email' | 'telegram'): void {
@@ -311,7 +467,16 @@ export class LoginComponent implements OnInit, OnDestroy {
       })
     ).subscribe({
       next: (response) => {
-        this.openSuccessModal(response.mensaje || 'El código de verificación fue enviado correctamente.');
+        // Página 9: calcular destino enmascarado según canal.
+        this.maskedContact = this.verificationChannel === 'email'
+          ? this.maskEmail(this.verificationStepData.correoElectronico)
+          : this.maskPhone(this.verificationStepData.numeroCelular);
+        this.verificationCodeSent = true;
+
+        this.openSuccessModal(
+          response.mensaje || 'El código de verificación fue enviado correctamente.',
+          'info'
+        );
         this.loadCaptcha();
       },
       error: (error) => {
@@ -353,7 +518,10 @@ export class LoginComponent implements OnInit, OnDestroy {
         }
 
         this.currentStep = 'done';
-        this.openSuccessModal(response.mensaje || 'La validación se realizó correctamente.');
+        this.openSuccessModal(
+          response.mensaje || 'La validación se realizó correctamente.',
+          'info'
+        );
       },
       error: (error) => {
         this.errorMessage =
@@ -367,6 +535,8 @@ export class LoginComponent implements OnInit, OnDestroy {
   goBackToAccess(): void {
     this.currentStep = 'access';
     this.verificationCode = '';
+    this.verificationCodeSent = false;
+    this.maskedContact = '';
     this.errorMessage = '';
     this.loadCaptcha();
     this.cdr.detectChanges();
@@ -374,11 +544,5 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   goToLogin(): void {
     this.router.navigate(['/login']);
-  }
-  openActivationTabAndShowCloseMessage(): void {
-    this.showCloseTabMessage = true;
-    this.currentStep = 'done';
-    this.modalState.isOpen = false;
-    this.cdr.detectChanges();
   }
 }

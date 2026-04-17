@@ -15,7 +15,7 @@
 
 .access-modal-card {
   position: relative;
-  width: min(100%, 440px);
+  width: min(100%, 460px);
   min-height: 180px;
   border-radius: 18px;
   background: #ffffff;
@@ -24,6 +24,10 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+}
+
+.access-modal-card.is-error {
+  border-top: 4px solid #d97706;
 }
 
 .access-modal-close {
@@ -50,8 +54,24 @@
   object-fit: contain;
 }
 
+.access-modal-icon--error .access-modal-icon-emoji {
+  font-size: 2rem;
+  line-height: 1;
+}
+
 .access-modal-body {
   text-align: center;
+}
+
+.access-modal-title {
+  margin: 0 0 0.6rem 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #1f1f1f;
+}
+
+.is-error .access-modal-title {
+  color: #b4540d;
 }
 
 .access-modal-message {
@@ -59,6 +79,51 @@
   font-size: 1rem;
   line-height: 1.45;
   color: #2f2f2f;
+}
+
+.access-modal-submessage {
+  margin-top: 0.6rem;
+  font-size: 0.92rem;
+  color: #3f3f3f;
+}
+
+.access-modal-support {
+  margin: 0.85rem auto 0.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.6rem 0.9rem;
+  background: rgba(138, 27, 71, 0.06);
+  border-radius: 12px;
+  max-width: 340px;
+}
+
+.access-modal-support-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.92rem;
+}
+
+.access-modal-support-row a {
+  color: #7a123f;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.access-modal-support-row a:hover {
+  text-decoration: underline;
+}
+
+.access-modal-support-icon {
+  font-size: 1rem;
+}
+
+.access-modal-hint {
+  margin: 0.75rem 0 0 0;
+  font-size: 0.85rem;
+  color: #555;
 }
 
 .access-modal-actions {
@@ -96,5 +161,9 @@
 
   .access-modal-button {
     width: 100%;
+  }
+
+  .access-modal-support-row {
+    font-size: 0.88rem;
   }
 }

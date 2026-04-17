@@ -1,6 +1,6 @@
 @if (isOpen) {
 <div class="access-modal-backdrop" (click)="onBackdropClick($event)">
-    <div class="access-modal-card">
+    <div class="access-modal-card" [class.is-error]="!isSuccess">
 
         <button type="button" class="access-modal-close" aria-label="Cerrar modal" (click)="close()">
             ×
@@ -12,12 +12,43 @@
         </div>
         }
 
+        @if (!isSuccess) {
+        <div class="access-modal-icon access-modal-icon--error">
+            <span class="access-modal-icon-emoji" aria-hidden="true">⚠️</span>
+        </div>
+        }
+
         <div class="access-modal-body">
             @if (isSuccess && emailMasked) {
+            <p class="access-modal-title">Solicitud enviada</p>
             <p class="access-modal-message">
-                Enviamos un enlace a
+                Hemos enviado un enlace de verificación a
                 <strong>{{ emailMasked }}</strong>
-                para generar tu nueva cuenta. Si no lo encuentras, revisa tu carpeta de spam.
+                para activar tu nueva cuenta. Si no lo ves en tu bandeja de entrada, revisa tu
+                carpeta de <strong>spam o correo no deseado</strong>.
+            </p>
+            } @else if (!isSuccess) {
+            <p class="access-modal-title">No fue posible validar la cuenta</p>
+            <p class="access-modal-message">
+                La información proporcionada no coincide con ninguna cuenta registrada o ya no se
+                encuentra activa.
+            </p>
+            <p class="access-modal-message access-modal-submessage">
+                Si no recuerdas tus datos de acceso anteriores, puedes solicitar apoyo directamente
+                en la <strong>Mesa de Ayuda REPUVE</strong>.
+            </p>
+            <div class="access-modal-support">
+                <div class="access-modal-support-row">
+                    <span class="access-modal-support-icon" aria-hidden="true">📧</span>
+                    <a href="mailto:correo@repuve.gob.mx">correo&#64;repuve.gob.mx</a>
+                </div>
+                <div class="access-modal-support-row">
+                    <span class="access-modal-support-icon" aria-hidden="true">📞</span>
+                    <a href="tel:800XXXXXXX">800-XXX-XXXX</a>
+                </div>
+            </div>
+            <p class="access-modal-hint">
+                <em>El equipo de soporte podrá orientarte para completar tu registro.</em>
             </p>
             } @else {
             <p class="access-modal-message">

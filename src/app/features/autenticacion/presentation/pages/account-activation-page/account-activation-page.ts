@@ -7,7 +7,7 @@ import {
     inject
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription, finalize, timeout } from 'rxjs';
 
 import { AuthShellComponent } from '../../../../../shared/layouts/auth-shell/auth-shell.component';
@@ -24,6 +24,7 @@ type PageStep = 'loading' | 'verify-code' | 'done' | 'error';
 })
 export class AccountActivationPageComponent implements OnInit, OnDestroy {
     private readonly route = inject(ActivatedRoute);
+    private readonly router = inject(Router);
     private readonly authFacade = inject(AuthFacade);
     private readonly cdr = inject(ChangeDetectorRef);
 
@@ -58,9 +59,10 @@ export class AccountActivationPageComponent implements OnInit, OnDestroy {
     ngOnInit(): void {
         const token = this.route.snapshot.queryParamMap.get('token')?.trim() ?? '';
 
+        // Página 6: si no hay token (enlace ya expirado o inválido)
+        // redirigir directamente al Login en lugar de mostrar "Activación fallida".
         if (!token) {
-            this.step = 'error';
-            this.errorMessage = 'No se recibió el token de activación.';
+            this.redirectToLogin();
             return;
         }
 
@@ -75,16 +77,13 @@ export class AccountActivationPageComponent implements OnInit, OnDestroy {
                     this.step = 'verify-code';
                     this.loadCaptcha();
                 } else {
-                    this.step = 'error';
-                    this.errorMessage = response.mensaje || 'No se pudo iniciar el flujo de activación.';
+                    // Página 6: token expirado / inválido → ir al Login en vez de pantalla de error.
+                    this.redirectToLogin();
                 }
             },
-            error: (error) => {
-                this.step = 'error';
-                this.errorMessage =
-                    error?.error?.mensaje ||
-                    error?.message ||
-                    'No se pudo completar la activación de la cuenta.';
+            error: () => {
+                // Página 6: cualquier error del backend (incluye 24h expirado) → redirigir al Login.
+                this.redirectToLogin();
             }
         });
     }
@@ -92,6 +91,14 @@ export class AccountActivationPageComponent implements OnInit, OnDestroy {
     ngOnDestroy(): void {
         this.captchaSubscription?.unsubscribe();
         this.stopCountdown();
+    }
+
+    /**
+     * Página 6: al dar clic en un enlace expirado o inválido, se redirige a la
+     * pantalla principal de Login. No se muestra la pantalla "Activación fallida".
+     */
+    private redirectToLogin(): void {
+        this.router.navigate(['/login'], { replaceUrl: true });
     }
 
     // ── Captcha ───────────────────────────────────────────────────────────────
