@@ -1,5 +1,4 @@
-<app-auth-shell [logoSrc]="'images/GOBMX.png'" [title]="'Registro Publico Vehicular<br>REPUVE'"
-    [subtitle]="'Sujetos obligados'">
+<app-auth-shell [logoSrc]="'images/GOBMX.png'" [title]="'Registro Publico Vehicular'" [subtitle]="'Sujetos obligados'">
 
     <ng-container [ngSwitch]="currentStep">
 
@@ -79,73 +78,98 @@
                 </div>
             </div>
 
-            <!-- Page 8: guidance text highlighted -->
-            <div class="verification-guide">
-                <strong>Verificación de cuenta.</strong> Ingresa el usuario que recibiste en tu correo electrónico
-                y selecciona el medio por el que deseas recibir tu código de verificación.
-            </div>
-
-            <div class="verification-section-title">
-                Enviar codigo de verificacion
-            </div>
-
-            <div class="channel-selector">
-                <button type="button" class="channel-btn" [class.active]="verificationChannel === 'email'"
-                    (click)="selectVerificationChannel('email')">
-                    Correo electronico
-                </button>
-
-                <button type="button" class="channel-btn" [class.active]="verificationChannel === 'telegram'"
-                    (click)="selectVerificationChannel('telegram')">
-                    Telegram
-                </button>
-            </div>
-
-            <!-- Page 9: mensajes según canal después de enviar código -->
-            <div class="channel-hint" *ngIf="verificationCodeSent">
-                <span *ngIf="verificationChannel === 'email'">
-                    Hemos enviado un código de verificación a
-                    <strong>{{ maskedContact }}</strong>. Ingrésalo para continuar con el proceso.
-                </span>
-                <span *ngIf="verificationChannel === 'telegram'">
-                    Hemos enviado un código de verificación al número
-                    <strong>{{ maskedContact }}</strong> vía Telegram. Ingrésalo para continuar con el proceso.
-                </span>
-            </div>
-
-            <div class="captcha-wrapper compact-captcha">
-                <div *ngIf="loadingCaptcha" class="captcha-loading">Cargando captcha...</div>
-
-                <ng-container *ngIf="!loadingCaptcha && captchaImageSrc">
-                    <img class="captcha-image" [src]="captchaImageSrc" alt="Captcha" />
-                    <div class="captcha-expiry">Expira en: {{ captchaTimeLabel }}</div>
-                </ng-container>
-
-                <div *ngIf="captchaExpired && !loadingCaptcha" class="captcha-expired">
-                    El captcha expiró. Solicita uno nuevo.
+            <!-- ═══ FASE 1: Enviar código (se oculta tras enviar) ═══ -->
+            <ng-container *ngIf="!verificationCodeSent">
+                <!-- Page 8: guidance text highlighted -->
+                <div class="verification-guide">
+                    <strong>Verificación de cuenta.</strong> Ingresa el usuario que recibiste en tu correo electrónico
+                    y selecciona el medio por el que deseas recibir tu código de verificación.
                 </div>
 
-                <button type="button" class="refresh-link" (click)="loadCaptcha()" [disabled]="loadingCaptcha">
-                    {{ loadingCaptcha ? 'Cargando...' : 'Refrescar codigo' }}
+                <div class="verification-section-title">
+                    Enviar codigo de verificacion
+                </div>
+
+                <div class="channel-selector">
+                    <button type="button" class="channel-btn" [class.active]="verificationChannel === 'email'"
+                        (click)="selectVerificationChannel('email')">
+                        Correo electronico
+                    </button>
+
+                    <button type="button" class="channel-btn" [class.active]="verificationChannel === 'telegram'"
+                        (click)="selectVerificationChannel('telegram')">
+                        Telegram
+                    </button>
+                </div>
+
+                <div class="captcha-wrapper compact-captcha">
+                    <div *ngIf="loadingCaptcha" class="captcha-loading">Cargando captcha...</div>
+
+                    <ng-container *ngIf="!loadingCaptcha && captchaImageSrc">
+                        <img class="captcha-image" [src]="captchaImageSrc" alt="Captcha" />
+                        <div class="captcha-expiry">Expira en: {{ captchaTimeLabel }}</div>
+                    </ng-container>
+
+                    <div *ngIf="captchaExpired && !loadingCaptcha" class="captcha-expired">
+                        El captcha expiró. Solicita uno nuevo.
+                    </div>
+
+                    <button type="button" class="refresh-link" (click)="loadCaptcha()" [disabled]="loadingCaptcha">
+                        {{ loadingCaptcha ? 'Cargando...' : 'Refrescar codigo' }}
+                    </button>
+                </div>
+
+                <div class="field-block compact">
+                    <input type="text" class="field-input" placeholder="Captcha" [(ngModel)]="model.captchaRespuesta"
+                        name="captchaRespuestaStep2"
+                        [disabled]="loadingCaptcha || captchaExpired || !model.captchaId" />
+                </div>
+
+                <div class="verification-actions">
+                    <button type="button" class="btn btn-secondary-action" (click)="sendVerificationCode()"
+                        [disabled]="sendingVerificationCode || loadingCaptcha || captchaExpired || !model.captchaId">
+                        {{ sendingVerificationCode ? 'Enviando...' : 'Enviar codigo' }}
+                    </button>
+                </div>
+            </ng-container>
+
+            <!-- ═══ FASE 2: Validar código (se muestra tras enviar) ═══ -->
+            <ng-container *ngIf="verificationCodeSent">
+                <!-- Page 9: mensajes según canal después de enviar código -->
+                <div class="channel-hint">
+                    <span *ngIf="verificationChannel === 'email'">
+                        Hemos enviado un código de verificación a
+                        <strong>{{ maskedContact }}</strong>. Ingrésalo para continuar con el proceso.
+                    </span>
+                    <span *ngIf="verificationChannel === 'telegram'">
+                        Hemos enviado un código de verificación al número
+                        <strong>{{ maskedContact }}</strong> vía Telegram. Ingrésalo para continuar con el proceso.
+                    </span>
+                </div>
+
+                <!-- Temporizador regresivo de 5 minutos -->
+                <div class="verification-timer" [class.timer-expired]="verificationTimerExpired">
+                    <span class="timer-icon">⏱️</span>
+                    <span *ngIf="!verificationTimerExpired">
+                        Tiempo restante: <strong>{{ verificationTimerLabel }}</strong>
+                    </span>
+                    <span *ngIf="verificationTimerExpired">
+                        El código ha expirado. Solicita uno nuevo.
+                    </span>
+                </div>
+
+                <div class="field-block">
+                    <input type="text" class="field-input verification-code-input" placeholder="Ingrese el codigo"
+                        maxlength="6" [(ngModel)]="verificationCode" name="verificationCode"
+                        [disabled]="verificationTimerExpired" />
+                </div>
+
+                <!-- Botón para reenviar código si expiró -->
+                <button *ngIf="verificationTimerExpired" type="button" class="refresh-link resend-link"
+                    (click)="resendVerificationCode()">
+                    Reenviar código de verificación
                 </button>
-            </div>
-
-            <div class="field-block compact">
-                <input type="text" class="field-input" placeholder="Captcha" [(ngModel)]="model.captchaRespuesta"
-                    name="captchaRespuestaStep2" [disabled]="loadingCaptcha || captchaExpired || !model.captchaId" />
-            </div>
-
-            <div class="verification-actions">
-                <button type="button" class="btn btn-secondary-action" (click)="sendVerificationCode()"
-                    [disabled]="sendingVerificationCode || loadingCaptcha || captchaExpired || !model.captchaId">
-                    {{ sendingVerificationCode ? 'Enviando...' : 'Enviar codigo' }}
-                </button>
-            </div>
-
-            <div class="field-block">
-                <input type="text" class="field-input verification-code-input" placeholder="Ingrese el codigo"
-                    maxlength="6" [(ngModel)]="verificationCode" name="verificationCode" />
-            </div>
+            </ng-container>
 
             <div *ngIf="errorMessage" class="error-box">
                 {{ errorMessage }}
@@ -157,7 +181,7 @@
                 </button>
 
                 <button type="button" class="btn btn-login" (click)="validateVerificationCode()"
-                    [disabled]="validatingVerificationCode">
+                    [disabled]="validatingVerificationCode || !verificationCodeSent || verificationTimerExpired">
                     {{ validatingVerificationCode ? 'Validando...' : 'Validar' }}
                 </button>
             </div>

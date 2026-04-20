@@ -9,10 +9,10 @@
             <div class="auth-shell__panel justify-content-center align-items-center d-flex flex-column">
                 <img class="auth-shell__logo" [src]="logoSrc" alt="Logo institucional" />
 
-                <h1 class="auth-shell__title text-center fw-bold mb-2" [innerHTML]="title"></h1>
                 @if (subtitle) {
                 <p class="auth-shell__subtitle">{{ subtitle }}</p>
                 }
+                <h1 class="auth-shell__title text-center fw-bold mb-2" [innerHTML]="title"></h1>
 
                 <ng-content></ng-content>
             </div>

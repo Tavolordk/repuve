@@ -61,6 +61,11 @@ export class LoginComponent implements OnInit, OnDestroy {
   sendingVerificationCode = false;
   validatingVerificationCode = false;
 
+  // Temporizador regresivo de código de verificación (5 minutos)
+  verificationTimerSeconds = 0;
+  verificationTimerExpired = false;
+  private verificationTimerIntervalId: ReturnType<typeof setInterval> | null = null;
+
   // Página 7: bandera que indica si el usuario capturado proviene del correo
   isExistingUserFlow = false;
   userValidated = false;
@@ -106,6 +111,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.captchaSubscription?.unsubscribe();
     this.stopCountdown();
+    this.stopVerificationTimer();
   }
 
   /**
@@ -216,6 +222,54 @@ export class LoginComponent implements OnInit, OnDestroy {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   }
 
+  /** Etiqueta del temporizador regresivo de código de verificación (mm:ss). */
+  get verificationTimerLabel(): string {
+    const minutes = Math.floor(this.verificationTimerSeconds / 60);
+    const seconds = this.verificationTimerSeconds % 60;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  }
+
+  /** Inicia el temporizador regresivo de 5 minutos para el código de verificación. */
+  private startVerificationTimer(): void {
+    this.stopVerificationTimer();
+    this.verificationTimerSeconds = 5 * 60; // 5 minutos
+    this.verificationTimerExpired = false;
+
+    this.verificationTimerIntervalId = setInterval(() => {
+      if (this.verificationTimerSeconds > 0) {
+        this.verificationTimerSeconds--;
+      }
+
+      if (this.verificationTimerSeconds <= 0) {
+        this.verificationTimerSeconds = 0;
+        this.verificationTimerExpired = true;
+        this.stopVerificationTimer();
+      }
+
+      this.cdr.detectChanges();
+    }, 1000);
+  }
+
+  private stopVerificationTimer(): void {
+    if (this.verificationTimerIntervalId) {
+      clearInterval(this.verificationTimerIntervalId);
+      this.verificationTimerIntervalId = null;
+    }
+  }
+
+  /** Permite reenviar el código de verificación volviendo a la fase 1. */
+  resendVerificationCode(): void {
+    this.verificationCodeSent = false;
+    this.verificationCode = '';
+    this.verificationTimerExpired = false;
+    this.verificationTimerSeconds = 0;
+    this.maskedContact = '';
+    this.errorMessage = '';
+    this.stopVerificationTimer();
+    this.loadCaptcha();
+    this.cdr.detectChanges();
+  }
+
   submit(): void {
     if (this.submitting || this.loadingCaptcha) return;
 
@@ -231,6 +285,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 
     this.errorMessage = '';
     this.submitting = true;
+    this.normalizeToUpperCase();
 
     // Página 7: si es flujo de validación de usuario existente, se usa un camino distinto.
     if (this.isExistingUserFlow) {
@@ -400,6 +455,15 @@ export class LoginComponent implements OnInit, OnDestroy {
     };
   }
 
+  /** Normaliza todos los campos de texto del modelo a mayúsculas. */
+  private normalizeToUpperCase(): void {
+    this.model.usuario = (this.model.usuario ?? '').toUpperCase();
+    this.model.correoElectronico = (this.model.correoElectronico ?? '').toUpperCase();
+    this.model.numeroCelular = (this.model.numeroCelular ?? '').toUpperCase();
+    this.model.captchaRespuesta = (this.model.captchaRespuesta ?? '').toUpperCase();
+    this.verificationCode = (this.verificationCode ?? '').toUpperCase();
+  }
+
   private maskEmail(email: string): string {
     const normalizedEmail = (email ?? '').trim();
 
@@ -451,6 +515,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 
     this.errorMessage = '';
     this.sendingVerificationCode = true;
+    this.normalizeToUpperCase();
 
     this.authFacade.sendVerificationCode({
       usuario: this.verificationStepData.usuario,
@@ -472,6 +537,9 @@ export class LoginComponent implements OnInit, OnDestroy {
           ? this.maskEmail(this.verificationStepData.correoElectronico)
           : this.maskPhone(this.verificationStepData.numeroCelular);
         this.verificationCodeSent = true;
+
+        // Iniciar temporizador regresivo de 5 minutos
+        this.startVerificationTimer();
 
         this.openSuccessModal(
           response.mensaje || 'El código de verificación fue enviado correctamente.',
@@ -499,10 +567,11 @@ export class LoginComponent implements OnInit, OnDestroy {
 
     this.errorMessage = '';
     this.validatingVerificationCode = true;
+    this.normalizeToUpperCase();
 
     this.authFacade.verifyCode({
       usuario: this.verificationStepData.usuario,
-      codigo: this.verificationCode.trim(),
+      codigo: this.verificationCode.trim().toUpperCase(),
       medioContacto: this.verificationChannel === 'email' ? 'correo' : 'telegram'
     }).pipe(
       timeout(15000),
@@ -538,6 +607,9 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.verificationCodeSent = false;
     this.maskedContact = '';
     this.errorMessage = '';
+    this.stopVerificationTimer();
+    this.verificationTimerExpired = false;
+    this.verificationTimerSeconds = 0;
     this.loadCaptcha();
     this.cdr.detectChanges();
   }

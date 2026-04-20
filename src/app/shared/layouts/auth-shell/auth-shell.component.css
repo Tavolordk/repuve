@@ -72,6 +72,7 @@
   max-width: 280px;
   width: 100%;
   height: auto;
+  margin-top: -10rem;
 }
 
 .auth-shell__title {
@@ -84,7 +85,8 @@
 .auth-shell__subtitle {
   font-size: 1rem;
   color: #111;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.15rem;
+  margin-top: 0.25rem;
 }
 
 @media (max-width: 1399.98px) {
@@ -202,6 +204,7 @@
 
   .auth-shell__logo {
     max-width: 170px;
+    margin-top: -2rem;
   }
 
   .auth-shell__title {
