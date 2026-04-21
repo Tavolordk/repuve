@@ -1,0 +1,44 @@
+@if (isOpen) {
+<div class="deny-modal-backdrop" (click)="onBackdropClick($event)">
+    <div class="deny-modal-card" (click)="$event.stopPropagation()">
+        <div class="deny-modal-icon">
+            <fa-icon class="deny-modal-icon-symbol" [icon]="faTriangleExclamation" aria-hidden="true"></fa-icon>
+        </div>
+
+        <div class="deny-modal-body">
+            <p class="deny-modal-title">{{ title }}</p>
+            <p class="deny-modal-description">{{ description }}</p>
+        </div>
+
+        <div class="deny-modal-field">
+            <label class="deny-modal-label" for="motivoNegacion">
+                Motivo <span class="deny-modal-required">*</span>
+            </label>
+            <textarea id="motivoNegacion" name="motivoNegacion" class="deny-modal-textarea"
+                [class.has-error]="showError" rows="4" [maxlength]="maxLength"
+                [placeholder]="'Describe el motivo de la denegación (mínimo ' + minLength + ' caracteres)'"
+                [(ngModel)]="motivo" (blur)="touched = true" [disabled]="loading">
+            </textarea>
+
+            <div class="deny-modal-footer">
+                <span class="deny-modal-error" *ngIf="showError">
+                    El motivo debe tener al menos {{ minLength }} caracteres.
+                </span>
+                <span class="deny-modal-counter" [class.is-max]="motivo.length >= maxLength">
+                    {{ motivo.length }}/{{ maxLength }}
+                </span>
+            </div>
+        </div>
+
+        <div class="deny-modal-actions">
+            <button type="button" class="deny-modal-btn deny-modal-btn--cancel" (click)="cancel()" [disabled]="loading">
+                Cancelar
+            </button>
+            <button type="button" class="deny-modal-btn deny-modal-btn--confirm" (click)="confirm()"
+                [disabled]="loading">
+                {{ loading ? 'Enviando...' : 'Confirmar denegación' }}
+            </button>
+        </div>
+    </div>
+</div>
+}

@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
 import { API_CONFIG } from '../../../../core/config/app.config';
 import {
@@ -76,12 +76,18 @@ export class BlockedAccountApi {
     }
 
     resolveReactivation(
-        request: ResolveReactivationRequestEntity
+        request: ResolveReactivationRequestEntity,
+        sessionToken?: string
     ): Observable<ResolveReactivationResponseEntity> {
+        const headers = sessionToken
+            ? new HttpHeaders({ Authorization: `Bearer ${sessionToken}` })
+            : undefined;
+
         return this.http
             .post<ResolveReactivationApiResponse>(
                 `${this.baseUrl}/resolverReactivacionCuenta`,
-                request
+                request,
+                headers ? { headers } : {}
             )
             .pipe(
                 map((response) => {

@@ -13,8 +13,9 @@ export class ResolveReactivationAccount {
     constructor(private readonly blockedAccountApi: BlockedAccountApi) { }
 
     execute(
-        request: ResolveReactivationRequestEntity
+        request: ResolveReactivationRequestEntity,
+        sessionToken?: string
     ): Observable<ResolveReactivationResponseEntity> {
-        return this.blockedAccountApi.resolveReactivation(request);
+        return this.blockedAccountApi.resolveReactivation(request, sessionToken);
     }
 }

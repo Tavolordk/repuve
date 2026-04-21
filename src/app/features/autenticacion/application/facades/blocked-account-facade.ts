@@ -39,8 +39,9 @@ export class BlockedAccountFacade {
     }
 
     resolveReactivation(
-        request: ResolveReactivationRequestEntity
+        request: ResolveReactivationRequestEntity,
+        sessionToken?: string
     ): Observable<ResolveReactivationResponseEntity> {
-        return this.resolveReactivationAccountUseCase.execute(request);
+        return this.resolveReactivationAccountUseCase.execute(request, sessionToken);
     }
 }

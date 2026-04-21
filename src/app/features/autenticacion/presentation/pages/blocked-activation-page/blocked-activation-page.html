@@ -71,13 +71,83 @@
             <fa-icon class="note-icon" [icon]="faCircleInfo" aria-hidden="true"></fa-icon>
             A partir de este momento deberás esperar a que el equipo de REPUVE revise y responda tu solicitud.
         </div>
+    </div>
 
-        <p class="result-text muted">
-            Puedes cerrar esta pestaña de forma segura.
-        </p>
+    <div *ngIf="step === 'token-review'" class="review-step">
+        <div class="review-card">
+            <div class="review-badge">Solicitud encontrada</div>
+
+            <h3 class="review-title">Revisión de reactivación de cuenta</h3>
+
+            <p class="review-text">
+                Hemos cargado la información de la solicitud. Revisa el resumen y abre el detalle para continuar el
+                proceso.
+            </p>
+
+            <div class="review-grid">
+                <div class="review-item">
+                    <span class="review-label">Nombre de usuario</span>
+                    <span class="review-value">{{ tokenNombreUsuario || 'N/D' }}</span>
+                </div>
+
+                <div class="review-item">
+                    <span class="review-label">Cuenta de usuario</span>
+                    <span class="review-value">{{ tokenUsuario || 'N/D' }}</span>
+                </div>
+
+                <div class="review-item review-item-full">
+                    <span class="review-label">Correo electrónico</span>
+                    <span class="review-value">{{ tokenCorreoElectronico || 'N/D' }}</span>
+                </div>
+
+                <div class="review-item review-item-full">
+                    <span class="review-label">Mensaje</span>
+                    <span class="review-value">{{ tokenMensaje || 'Sin mensaje disponible.' }}</span>
+                </div>
+            </div>
+
+            <div *ngIf="modalLoading" class="review-loading">
+                Cargando información de la solicitud...
+            </div>
+
+            <div class="step-actions">
+                <button type="button" class="btn btn-outline-step" (click)="goToLogin()">
+                    Volver
+                </button>
+
+                <button type="button" class="btn btn-activate" (click)="openTokenReviewModal($event)"
+                    [disabled]="modalLoading || !tokenUsuario">
+                    Ver detalle
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="step === 'done'" class="result-step">
+        <fa-icon class="result-icon" [icon]="faCircleCheck" aria-hidden="true"></fa-icon>
+        <div class="result-title success-title">Proceso completado</div>
+        <p class="result-text">{{ successMessage }}</p>
+
+        <button type="button" class="btn btn-activate" (click)="goToLogin()">
+            Ir al inicio
+        </button>
+    </div>
+
+    <div *ngIf="step === 'error'" class="result-step">
+        <div class="result-title error-title">No fue posible continuar</div>
+        <p class="result-text">{{ errorMessage }}</p>
+
+        <button type="button" class="btn btn-activate" (click)="goToLogin()">
+            Ir al inicio
+        </button>
     </div>
 </app-auth-shell>
 
-<app-blocked-account-modal [isOpen]="blockedModalOpen && step === 'blocked-dialog'" (cancelled)="onBlockedCancel()"
-    (activateRequested)="onBlockedActivate()">
+<app-blocked-account-modal [isOpen]="shouldShowBlockedModal" [title]="modalTitle" [message]="modalMessage"
+    [cancelText]="modalCancelText" [confirmText]="modalConfirmText" [loading]="modalLoading"
+    (cancelled)="onBlockedCancel()" (activateRequested)="onBlockedActivate()">
 </app-blocked-account-modal>
+
+<app-deny-reason-modal [isOpen]="denyModalOpen" [loading]="modalLoading" (cancelled)="onDenyCancelled()"
+    (confirmed)="onDenyConfirmed($event)">
+</app-deny-reason-modal>

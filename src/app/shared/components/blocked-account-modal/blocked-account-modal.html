@@ -1,22 +1,24 @@
 @if (isOpen) {
 <div class="blocked-modal-backdrop" (click)="onBackdropClick($event)">
-    <div class="blocked-modal-card">
+    <div class="blocked-modal-card" (click)="$event.stopPropagation()">
 
         <div class="blocked-modal-icon">
             <fa-icon class="blocked-modal-icon-symbol" [icon]="faLock" aria-hidden="true"></fa-icon>
         </div>
 
         <div class="blocked-modal-body">
-            <p class="blocked-modal-title">Cuenta bloqueada</p>
+            <p class="blocked-modal-title">{{ title }}</p>
             <p class="blocked-modal-message">{{ message }}</p>
         </div>
 
         <div class="blocked-modal-actions">
-            <button type="button" class="blocked-modal-btn blocked-modal-btn--cancel" (click)="cancel()">
-                Cancelar
+            <button type="button" class="blocked-modal-btn blocked-modal-btn--cancel" (click)="cancel()"
+                [disabled]="loading">
+                {{ loading ? 'Procesando...' : cancelText }}
             </button>
-            <button type="button" class="blocked-modal-btn blocked-modal-btn--activate" (click)="activate()">
-                Activar cuenta
+            <button type="button" class="blocked-modal-btn blocked-modal-btn--activate" (click)="activate()"
+                [disabled]="loading">
+                {{ loading ? 'Procesando...' : confirmText }}
             </button>
         </div>
     </div>

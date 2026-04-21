@@ -14,22 +14,27 @@ export class BlockedAccountModalComponent {
     protected readonly faLock = faLock;
 
     @Input() isOpen = false;
+    @Input() title = 'Cuenta bloqueada';
     @Input() message = 'Tu cuenta ha sido bloqueada. Puedes solicitar la activación para recuperar el acceso.';
+    @Input() cancelText = 'Cancelar';
+    @Input() confirmText = 'Activar cuenta';
+    @Input() loading = false;
 
     @Output() cancelled = new EventEmitter<void>();
     @Output() activateRequested = new EventEmitter<void>();
 
-    onBackdropClick(event: MouseEvent): void {
-        if (event.target === event.currentTarget) {
-            this.cancel();
-        }
+    onBackdropClick(_event: MouseEvent): void {
+        // Intencionalmente no cerramos por click en el fondo.
+        // El cierre sólo ocurre con los botones.
     }
 
     cancel(): void {
+        if (this.loading) return;
         this.cancelled.emit();
     }
 
     activate(): void {
+        if (this.loading) return;
         this.activateRequested.emit();
     }
 }
