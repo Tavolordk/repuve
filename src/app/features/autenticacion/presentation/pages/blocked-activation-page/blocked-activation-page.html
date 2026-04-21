@@ -81,6 +81,7 @@
         </p>
     </div>
 
+
     <div *ngIf="step === 'verify-code'" class="verification-step">
 
         <div class="form-header">
@@ -92,10 +93,26 @@
             Ingresa el código de 6 dígitos que recibiste en tu correo electrónico.
         </p>
 
-        <div class="verification-note">
-            <span class="note-icon" aria-hidden="true">⚠️</span>
-            El código de verificación tiene una validez de <strong>5 minutos</strong>.
-            Si no lo ingresas en ese tiempo, deberás solicitar uno nuevo.
+        <div class="code-countdown-wrapper" *ngIf="!codeExpired">
+            <div class="code-countdown-header">
+                <span class="code-countdown-icon" aria-hidden="true">⏱️</span>
+                <span class="code-countdown-label">Tiempo restante</span>
+                <span class="code-countdown-time" [class.urgent]="codeIsUrgent">
+                    {{ codeTimeLabel }}
+                </span>
+            </div>
+            <div class="code-progress-bar">
+                <div class="code-progress-fill" [class.urgent]="codeIsUrgent" [style.width.%]="codeProgressPercent">
+                </div>
+            </div>
+        </div>
+
+        <div class="code-expired-banner" *ngIf="codeExpired">
+            <span class="code-expired-icon" aria-hidden="true">⚠️</span>
+            <div class="code-expired-text">
+                <strong>El código ha expirado.</strong>
+                Solicita uno nuevo repitiendo el proceso de activación.
+            </div>
         </div>
 
         <div class="field-block">
@@ -105,7 +122,7 @@
 
         <div class="field-block">
             <input type="text" class="field-input verification-code-input" placeholder="Ingrese el código" maxlength="6"
-                [(ngModel)]="verificationCode" name="verificationCode" />
+                [(ngModel)]="verificationCode" name="verificationCode" [disabled]="codeExpired" />
         </div>
 
         <div *ngIf="codeErrorMessage" class="error-box">{{ codeErrorMessage }}</div>
@@ -116,7 +133,7 @@
             </button>
 
             <button type="button" class="btn btn-activate" (click)="validateCode()"
-                [disabled]="validating || verificationCode.length < 6">
+                [disabled]="validating || verificationCode.length < 6 || codeExpired">
                 {{ validating ? 'Validando...' : 'Validar código' }}
             </button>
         </div>
@@ -148,6 +165,7 @@
         </button>
     </div>
 
+
     <div *ngIf="step === 'code-error'" class="result-step">
         <div class="result-icon" aria-hidden="true">❌</div>
 
@@ -174,6 +192,7 @@
     </div>
 
 </app-auth-shell>
+
 
 <app-blocked-account-modal [isOpen]="blockedModalOpen && step === 'blocked-dialog'" (cancelled)="onBlockedCancel()"
     (activateRequested)="onBlockedActivate()">
