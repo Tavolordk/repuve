@@ -8,13 +8,13 @@
 
         @if (isSuccess && showMailIcon) {
         <div class="access-modal-icon">
-            <img src="images/mail_icon.png" alt="Correo" />
+            <fa-icon [icon]="faEnvelope" aria-hidden="true"></fa-icon>
         </div>
         }
 
         @if (!isSuccess) {
         <div class="access-modal-icon access-modal-icon--error">
-            <span class="access-modal-icon-emoji" aria-hidden="true">⚠️</span>
+            <fa-icon class="access-modal-icon-symbol" [icon]="faCircleExclamation" aria-hidden="true"></fa-icon>
         </div>
         }
 
@@ -39,11 +39,11 @@
             </p>
             <div class="access-modal-support">
                 <div class="access-modal-support-row">
-                    <span class="access-modal-support-icon" aria-hidden="true">📧</span>
+                    <fa-icon class="access-modal-support-icon" [icon]="faEnvelope" aria-hidden="true"></fa-icon>
                     <a href="mailto:correo@repuve.gob.mx">correo&#64;repuve.gob.mx</a>
                 </div>
                 <div class="access-modal-support-row">
-                    <span class="access-modal-support-icon" aria-hidden="true">📞</span>
+                    <fa-icon class="access-modal-support-icon" [icon]="faPhone" aria-hidden="true"></fa-icon>
                     <a href="tel:800XXXXXXX">800-XXX-XXXX</a>
                 </div>
             </div>

@@ -17,19 +17,11 @@ import {
     AccessFeedbackModalVariant
 } from '../../../../../shared/components/access-feedback-modal/access-feedback-modal';
 import { BlockedAccountFacade } from '../../../application/facades/blocked-account-facade';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { faCircleCheck, faCircleExclamation, faCircleInfo, faClock, faKey, faLockOpen } from '@fortawesome/free-solid-svg-icons';
 
-/**
- * Pasos de la página:
- *  - 'blocked-dialog'  → Etapa 1: modal de cuenta bloqueada (Pantalla 1)
- *  - 'form'            → Etapa 2: formulario de activación (Pantalla 2)
- *  - 'request-sent'    → Etapa 2: confirmación de solicitud enviada (Pantalla 3)
- *  - 'verify-code'     → Etapa 4: ingreso del código de verificación (Pantalla 8)
- *  - 'done'            → Etapa 4: resultado exitoso (Pantalla 9)
- *  - 'code-error'      → Etapa 4: código inválido o expirado (Pantalla 10)
- */
 type PageStep = 'blocked-dialog' | 'form' | 'request-sent' | 'verify-code' | 'done' | 'code-error';
 
-/** Duración del código de verificación en segundos (5 minutos). */
 const CODE_TTL_SECONDS = 5 * 60;
 
 @Component({
@@ -40,7 +32,8 @@ const CODE_TTL_SECONDS = 5 * 60;
         FormsModule,
         AuthShellComponent,
         BlockedAccountModalComponent,
-        AccessFeedbackModalComponent
+        AccessFeedbackModalComponent,
+        FontAwesomeModule
     ],
     templateUrl: './blocked-activation-page.html',
     styleUrl: './blocked-activation-page.scss'
@@ -50,6 +43,12 @@ export class BlockedActivationPageComponent implements OnInit, OnDestroy {
     private readonly cdr = inject(ChangeDetectorRef);
     private readonly router = inject(Router);
     private readonly route = inject(ActivatedRoute);
+    protected readonly faLockOpen = faLockOpen;
+    protected readonly faKey = faKey;
+    protected readonly faClock = faClock;
+    protected readonly faCircleCheck = faCircleCheck;
+    protected readonly faCircleInfo = faCircleInfo;
+    protected readonly faCircleExclamation = faCircleExclamation;
 
     step: PageStep = 'blocked-dialog';
 

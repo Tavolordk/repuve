@@ -5,7 +5,7 @@
     <form *ngIf="step === 'form'" class="activation-form" (ngSubmit)="submitActivation()">
 
         <div class="form-header">
-            <span class="form-header-icon" aria-hidden="true">🔓</span>
+            <fa-icon class="form-header-icon" [icon]="faLockOpen" aria-hidden="true"></fa-icon>
             <span class="form-header-text">Activación de cuenta bloqueada</span>
         </div>
 
@@ -61,8 +61,7 @@
 
 
     <div *ngIf="step === 'request-sent'" class="result-step">
-        <div class="result-icon" aria-hidden="true">✅</div>
-
+        <fa-icon class="result-icon" [icon]="faCircleCheck" aria-hidden="true"></fa-icon>
         <div class="result-title success-title">Solicitud enviada correctamente</div>
 
         <p class="result-text">
@@ -71,7 +70,7 @@
         </p>
 
         <div class="result-note">
-            <span class="note-icon" aria-hidden="true">ℹ️</span>
+            <fa-icon class="note-icon" [icon]="faCircleInfo" aria-hidden="true"></fa-icon>
             A partir de este momento deberás esperar a que el equipo de REPUVE revise y responda tu solicitud.
             El aviso llegará a tu correo electrónico registrado.
         </div>
@@ -85,7 +84,7 @@
     <div *ngIf="step === 'verify-code'" class="verification-step">
 
         <div class="form-header">
-            <span class="form-header-icon" aria-hidden="true">🔑</span>
+            <fa-icon class="form-header-icon" [icon]="faKey" aria-hidden="true"></fa-icon>
             <span class="form-header-text">Validar código de verificación</span>
         </div>
 
@@ -95,8 +94,8 @@
 
         <div class="code-countdown-wrapper" *ngIf="!codeExpired">
             <div class="code-countdown-header">
-                <span class="code-countdown-icon" aria-hidden="true">⏱️</span>
-                <span class="code-countdown-label">Tiempo restante</span>
+                <fa-icon class="code-countdown-icon" [icon]="faClock" aria-hidden="true"></fa-icon> <span
+                    class="code-countdown-label">Tiempo restante</span>
                 <span class="code-countdown-time" [class.urgent]="codeIsUrgent">
                     {{ codeTimeLabel }}
                 </span>
@@ -108,7 +107,7 @@
         </div>
 
         <div class="code-expired-banner" *ngIf="codeExpired">
-            <span class="code-expired-icon" aria-hidden="true">⚠️</span>
+            <fa-icon class="code-expired-icon" [icon]="faCircleExclamation" aria-hidden="true"></fa-icon>
             <div class="code-expired-text">
                 <strong>El código ha expirado.</strong>
                 Solicita uno nuevo repitiendo el proceso de activación.
@@ -141,8 +140,7 @@
 
 
     <div *ngIf="step === 'done'" class="result-step">
-        <div class="result-icon" aria-hidden="true">✅</div>
-
+        <fa-icon class="result-icon" [icon]="faCircleCheck" aria-hidden="true"></fa-icon>
         <div class="result-title success-title">Código validado correctamente</div>
 
         <p class="result-text">
@@ -155,8 +153,8 @@
         </p>
 
         <div class="result-note">
-            <span class="note-icon" aria-hidden="true">⚠️</span>
-            Esta contraseña es de uso temporal. Al ingresar por primera vez, la Plataforma te solicitará
+            <fa-icon class="note-icon" [icon]="faCircleExclamation" aria-hidden="true"></fa-icon> Esta contraseña es de
+            uso temporal. Al ingresar por primera vez, la Plataforma te solicitará
             cambiarla por una contraseña definitiva de tu elección.
         </div>
 
@@ -167,8 +165,7 @@
 
 
     <div *ngIf="step === 'code-error'" class="result-step">
-        <div class="result-icon" aria-hidden="true">❌</div>
-
+        <fa-icon class="result-icon result-icon--error" [icon]="faCircleExclamation" aria-hidden="true"></fa-icon>
         <div class="result-title error-title">Código inválido o expirado</div>
 
         <p class="result-text">

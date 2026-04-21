@@ -9,7 +9,8 @@
                     (ngModelChange)="onUsuarioChange($event)" />
                 <!-- Page 7: show validated state when user length matches and validated -->
                 <div *ngIf="isExistingUserFlow && userValidated" class="user-validated-hint">
-                    ✅ Usuario validado
+                    <fa-icon class="user-validated-icon" [icon]="faCircleCheck" aria-hidden="true"></fa-icon>
+                    Usuario validado
                 </div>
             </div>
 
@@ -149,8 +150,8 @@
 
                 <!-- Temporizador regresivo de 5 minutos -->
                 <div class="verification-timer" [class.timer-expired]="verificationTimerExpired">
-                    <span class="timer-icon">⏱️</span>
-                    <span *ngIf="!verificationTimerExpired">
+                    <fa-icon class="timer-icon" [icon]="faClock" aria-hidden="true"></fa-icon> <span
+                        *ngIf="!verificationTimerExpired">
                         Tiempo restante: <strong>{{ verificationTimerLabel }}</strong>
                     </span>
                     <span *ngIf="verificationTimerExpired">
@@ -190,8 +191,8 @@
         <!-- Page 3: redesigned "Proceso iniciado correctamente" panel -->
         <div *ngSwitchCase="'done'" class="verification-step">
             <div class="verification-title success-title">
-                <span class="success-icon" aria-hidden="true">✅</span>
-                Proceso iniciado correctamente
+                <fa-icon class="success-icon" [icon]="faCircleCheck" aria-hidden="true"></fa-icon> Proceso iniciado
+                correctamente
             </div>
 
             <p class="verification-text">

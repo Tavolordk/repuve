@@ -12,21 +12,10 @@ import {
   AccessFeedbackModalVariant
 } from '../../../../../shared/components/access-feedback-modal/access-feedback-modal';
 import { AuthSessionService } from '../../../infrastructure/services/auth-session.service';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { faCircleCheck, faClock } from '@fortawesome/free-solid-svg-icons';
 
-/**
- * Longitud esperada de la cuenta que se envía por correo al crear una nueva cuenta.
- * Cuando el usuario escribe un valor de esta longitud asumimos que está validando
- * un usuario existente (proveniente del correo) y se oculta correo/celular.
- */
 const EXISTING_USER_ACCOUNT_LENGTH = 14;
-
-/**
- * Razones internas que controlan qué debe pasar cuando el usuario cierra el modal.
- *  - 'success-new-account' → se creó una nueva cuenta: mostrar pantalla "Proceso iniciado"
- *  - 'user-validated'      → validación de usuario existente: pasar a verification-code
- *  - 'error' | 'info'      → no cambiar de pantalla, solo cerrar el modal (bug reportado
- *                            en Página 4: antes siempre se iba a "Proceso iniciado")
- */
 type ModalIntent = 'success-new-account' | 'user-validated' | 'error' | 'info';
 
 @Component({
@@ -36,7 +25,7 @@ type ModalIntent = 'success-new-account' | 'user-validated' | 'error' | 'info';
     CommonModule,
     FormsModule,
     AuthShellComponent,
-    AccessFeedbackModalComponent
+    AccessFeedbackModalComponent, FontAwesomeModule,
   ],
   templateUrl: './login-page.html',
   styleUrl: './login-page.scss'
@@ -50,7 +39,8 @@ export class LoginComponent implements OnInit, OnDestroy {
   private captchaSubscription?: Subscription;
   private countdownIntervalId: ReturnType<typeof setInterval> | null = null;
   private captchaRequestVersion = 0;
-
+  protected readonly faCircleCheck = faCircleCheck;
+  protected readonly faClock = faClock;
   currentStep: 'access' | 'verification-code' | 'done' = 'access';
 
   verificationChannel: 'email' | 'telegram' = 'email';
