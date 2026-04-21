@@ -3,26 +3,19 @@ import {
     ChangeDetectorRef,
     Component,
     OnDestroy,
-    OnInit,
     inject
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { Subscription, finalize, timeout } from 'rxjs';
 
 import { AuthShellComponent } from '../../../../../shared/layouts/auth-shell/auth-shell.component';
 import { BlockedAccountModalComponent } from '../../../../../shared/components/blocked-account-modal/blocked-account-modal';
-import {
-    AccessFeedbackModalComponent,
-    AccessFeedbackModalVariant
-} from '../../../../../shared/components/access-feedback-modal/access-feedback-modal';
 import { BlockedAccountFacade } from '../../../application/facades/blocked-account-facade';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faCircleCheck, faCircleExclamation, faCircleInfo, faClock, faKey, faLockOpen } from '@fortawesome/free-solid-svg-icons';
+import { faCircleCheck, faCircleInfo, faLockOpen } from '@fortawesome/free-solid-svg-icons';
 
-type PageStep = 'blocked-dialog' | 'form' | 'request-sent' | 'verify-code' | 'done' | 'code-error';
-
-const CODE_TTL_SECONDS = 5 * 60;
+type PageStep = 'blocked-dialog' | 'form' | 'request-sent';
 
 @Component({
     selector: 'app-blocked-activation-page',
@@ -32,30 +25,23 @@ const CODE_TTL_SECONDS = 5 * 60;
         FormsModule,
         AuthShellComponent,
         BlockedAccountModalComponent,
-        AccessFeedbackModalComponent,
         FontAwesomeModule
     ],
     templateUrl: './blocked-activation-page.html',
     styleUrl: './blocked-activation-page.scss'
 })
-export class BlockedActivationPageComponent implements OnInit, OnDestroy {
+export class BlockedActivationPageComponent implements OnDestroy {
     private readonly facade = inject(BlockedAccountFacade);
     private readonly cdr = inject(ChangeDetectorRef);
     private readonly router = inject(Router);
-    private readonly route = inject(ActivatedRoute);
+
     protected readonly faLockOpen = faLockOpen;
-    protected readonly faKey = faKey;
-    protected readonly faClock = faClock;
     protected readonly faCircleCheck = faCircleCheck;
     protected readonly faCircleInfo = faCircleInfo;
-    protected readonly faCircleExclamation = faCircleExclamation;
 
     step: PageStep = 'blocked-dialog';
-
-    /* ── Etapa 1 ──────────────────────────────────────────────────────── */
     blockedModalOpen = true;
 
-    /* ── Etapa 2: formulario ──────────────────────────────────────────── */
     model = {
         usuario: '',
         correoElectronico: '',
@@ -70,49 +56,14 @@ export class BlockedActivationPageComponent implements OnInit, OnDestroy {
     submitting = false;
     errorMessage = '';
 
-    /* ── Etapa 4: código de verificación ──────────────────────────────── */
-    verificationCode = '';
-    validating = false;
-    codeErrorMessage = '';
-
-    /* ── Cuenta regresiva del código (5 min) ──────────────────────────── */
-    codeTtlSeconds = 0;
-    codeExpired = false;
-    private codeCountdownId: ReturnType<typeof setInterval> | null = null;
-
-    /* ── Modal de feedback ────────────────────────────────────────────── */
-    feedbackModal = {
-        isOpen: false,
-        variant: 'success' as AccessFeedbackModalVariant,
-        message: ''
-    };
-
     private captchaSub?: Subscription;
     private countdownId: ReturnType<typeof setInterval> | null = null;
     private captchaVersion = 0;
 
-    ngOnInit(): void {
-        // Si llega con ?step=verify-code (redirigido desde el correo de aprobación)
-        const stepParam = this.route.snapshot.queryParamMap.get('step');
-        const usuario = this.route.snapshot.queryParamMap.get('usuario');
-
-        if (stepParam === 'verify-code' && usuario) {
-            this.model.usuario = usuario;
-            this.step = 'verify-code';
-            this.blockedModalOpen = false;
-            this.startCodeCountdown();
-        }
-    }
-
     ngOnDestroy(): void {
         this.captchaSub?.unsubscribe();
         this.stopCountdown();
-        this.stopCodeCountdown();
     }
-
-    /* ══════════════════════════════════════════════════════════════════
-       ETAPA 1 – Modal de cuenta bloqueada
-       ══════════════════════════════════════════════════════════════════ */
 
     onBlockedCancel(): void {
         this.blockedModalOpen = false;
@@ -124,10 +75,6 @@ export class BlockedActivationPageComponent implements OnInit, OnDestroy {
         this.step = 'form';
         this.loadCaptcha();
     }
-
-    /* ══════════════════════════════════════════════════════════════════
-       ETAPA 2 – Formulario de activación
-       ══════════════════════════════════════════════════════════════════ */
 
     submitActivation(): void {
         if (this.submitting || this.loadingCaptcha) return;
@@ -160,134 +107,15 @@ export class BlockedActivationPageComponent implements OnInit, OnDestroy {
                 this.errorMessage =
                     error?.error?.mensaje ||
                     error?.message ||
-                    'No se pudo enviar la solicitud de activación.';
+                    'No se pudo enviar la solicitud de desbloqueo.';
                 this.loadCaptcha();
             }
         });
     }
 
-    /* ══════════════════════════════════════════════════════════════════
-       ETAPA 4 – Validar código de verificación
-       ══════════════════════════════════════════════════════════════════ */
-
-    goToVerifyCode(): void {
-        this.step = 'verify-code';
-        this.verificationCode = '';
-        this.codeErrorMessage = '';
-        this.startCodeCountdown();
-        this.cdr.detectChanges();
-    }
-
-    validateCode(): void {
-        const code = this.verificationCode.trim();
-        if (code.length < 6 || this.validating) return;
-
-        if (this.codeExpired) {
-            this.codeErrorMessage = 'El código ha expirado. Solicita uno nuevo repitiendo el proceso de activación.';
-            return;
-        }
-
-        this.validating = true;
-        this.codeErrorMessage = '';
-
-        this.facade.validateBlockedCode({
-            usuario: this.model.usuario.trim(),
-            codigo: code
-        }).pipe(
-            timeout(15000),
-            finalize(() => {
-                this.validating = false;
-                this.cdr.detectChanges();
-            })
-        ).subscribe({
-            next: (response) => {
-                if (response.codigoVerificado) {
-                    this.stopCodeCountdown();
-                    this.step = 'done';
-                } else {
-                    this.step = 'code-error';
-                    this.stopCodeCountdown();
-                    this.codeErrorMessage = response.mensaje || 'El código ingresado no es válido o ha expirado.';
-                    this.verificationCode = '';
-                }
-            },
-            error: (error) => {
-                this.step = 'code-error';
-                this.stopCodeCountdown();
-                this.codeErrorMessage =
-                    error?.error?.mensaje ||
-                    error?.message ||
-                    'No se pudo validar el código.';
-                this.verificationCode = '';
-            }
-        });
-    }
-
-    retryActivation(): void {
-        this.verificationCode = '';
-        this.codeErrorMessage = '';
-        this.stopCodeCountdown();
-        this.step = 'form';
-        this.errorMessage = '';
-        this.model.captchaRespuesta = '';
-        this.loadCaptcha();
-    }
-
     goToLogin(): void {
         this.router.navigate(['/login'], { replaceUrl: true });
     }
-
-    /* ══════════════════════════════════════════════════════════════════
-       Cuenta regresiva del código de verificación (5 minutos)
-       ══════════════════════════════════════════════════════════════════ */
-
-    private startCodeCountdown(): void {
-        this.stopCodeCountdown();
-        this.codeTtlSeconds = CODE_TTL_SECONDS;
-        this.codeExpired = false;
-
-        this.codeCountdownId = setInterval(() => {
-            if (this.codeTtlSeconds > 0) {
-                this.codeTtlSeconds--;
-            }
-
-            if (this.codeTtlSeconds <= 0) {
-                this.codeTtlSeconds = 0;
-                this.codeExpired = true;
-                this.stopCodeCountdown();
-            }
-
-            this.cdr.detectChanges();
-        }, 1000);
-    }
-
-    private stopCodeCountdown(): void {
-        if (this.codeCountdownId) {
-            clearInterval(this.codeCountdownId);
-            this.codeCountdownId = null;
-        }
-    }
-
-    get codeTimeLabel(): string {
-        const m = Math.floor(this.codeTtlSeconds / 60);
-        const s = this.codeTtlSeconds % 60;
-        return `${m}:${s.toString().padStart(2, '0')}`;
-    }
-
-    /** Porcentaje restante de 0 a 100 para la barra de progreso. */
-    get codeProgressPercent(): number {
-        if (CODE_TTL_SECONDS === 0) return 0;
-        return (this.codeTtlSeconds / CODE_TTL_SECONDS) * 100;
-    }
-
-    /** true cuando queda menos de 1 minuto. */
-    get codeIsUrgent(): boolean {
-        return this.codeTtlSeconds > 0 && this.codeTtlSeconds <= 60;
-    }
-
-    /* ══════════════════════════════════════════════════════════════════
-       Captcha (reutilizado del patrón existente)
-       ══════════════════════════════════════════════════════════════════ */
 
     loadCaptcha(): void {
         const currentVersion = ++this.captchaVersion;
@@ -314,6 +142,7 @@ export class BlockedActivationPageComponent implements OnInit, OnDestroy {
         ).subscribe({
             next: (captcha) => {
                 if (currentVersion !== this.captchaVersion) return;
+
                 this.model.captchaId = captcha.captchaId;
                 this.captchaImageSrc = captcha.captchaImage;
                 this.captchaTtlSeconds = captcha.ttlSeconds ?? 0;
@@ -323,6 +152,7 @@ export class BlockedActivationPageComponent implements OnInit, OnDestroy {
             },
             error: () => {
                 if (currentVersion !== this.captchaVersion) return;
+
                 this.errorMessage = 'No se pudo cargar el captcha.';
                 this.captchaExpired = true;
                 this.cdr.detectChanges();
@@ -332,14 +162,19 @@ export class BlockedActivationPageComponent implements OnInit, OnDestroy {
 
     private startCountdown(): void {
         this.stopCountdown();
+
         this.countdownId = setInterval(() => {
-            if (this.captchaTtlSeconds > 0) this.captchaTtlSeconds--;
+            if (this.captchaTtlSeconds > 0) {
+                this.captchaTtlSeconds--;
+            }
+
             if (this.captchaTtlSeconds <= 0) {
                 this.captchaTtlSeconds = 0;
                 this.captchaExpired = true;
                 this.model.captchaId = '';
                 this.stopCountdown();
             }
+
             this.cdr.detectChanges();
         }, 1000);
     }
@@ -355,10 +190,5 @@ export class BlockedActivationPageComponent implements OnInit, OnDestroy {
         const m = Math.floor(this.captchaTtlSeconds / 60);
         const s = this.captchaTtlSeconds % 60;
         return `${m}:${s.toString().padStart(2, '0')}`;
-    }
-
-
-    closeFeedbackModal(): void {
-        this.feedbackModal.isOpen = false;
     }
 }

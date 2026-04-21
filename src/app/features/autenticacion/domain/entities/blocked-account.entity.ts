@@ -8,45 +8,38 @@ export interface BlockedActivationRequestEntity {
 export interface BlockedActivationResponseEntity {
     success: boolean;
     mensaje: string;
-    solicitudId: string;
+    usuario: string;
+    solicitudEnviada: boolean;
 }
 
-export interface ActivationSolicitudEntity {
-    solicitudId: string;
-    nombre: string;
+export interface ReactivateAccountResponseEntity {
+    success: boolean;
+    mensaje: string;
+    nombreUsuario: string;
     usuario: string;
     correoElectronico: string;
-    numeroCelular: string;
-    fechaSolicitud: string;
-    estado: 'pendiente' | 'aceptada' | 'denegada';
+    token: string;
+    tipoToken: string;
+    expiracionMinutos: number;
+    fechaExpiracionUtc: string;
+    tokenConsumido: boolean;
+    reactivacionProcesada: boolean;
 }
 
-export interface ActivationSolicitudesResponseEntity {
-    success: boolean;
-    mensaje: string;
-    solicitudes: ActivationSolicitudEntity[];
-}
-
-export interface ProcessActivationRequestEntity {
-    solicitudId: string;
-    accion: 'aceptar' | 'denegar';
-    motivoDenegacion?: string;
-}
-
-export interface ProcessActivationResponseEntity {
-    success: boolean;
-    mensaje: string;
-}
-
-export interface ValidateBlockedCodeRequestEntity {
+export interface ResolveReactivationRequestEntity {
     usuario: string;
-    codigo: string;
+    aceptar: boolean;
+    motivoNegacion?: string;
 }
 
-export interface ValidateBlockedCodeResponseEntity {
+export interface ResolveReactivationResponseEntity {
     success: boolean;
     mensaje: string;
-    codigoVerificado: boolean;
+    usuario: string;
+    aceptado: boolean;
+    procesado: boolean;
+    contrasenaActualizada: boolean;
+    motivoNegacion?: string;
 }
 
 type ApiEnvelope<T> = {
@@ -58,16 +51,26 @@ type ApiEnvelope<T> = {
 };
 
 export type BlockedActivationApiResponse = ApiEnvelope<{
-    solicitudId: string;
-}>;
-
-export type ActivationSolicitudesApiResponse = ApiEnvelope<{
-    solicitudes: ActivationSolicitudEntity[];
-}>;
-
-export type ProcessActivationApiResponse = ApiEnvelope<Record<string, never>>;
-
-export type ValidateBlockedCodeApiResponse = ApiEnvelope<{
     usuario: string;
-    codigoVerificado: boolean;
+    solicitudEnviada: boolean;
+}>;
+
+export type ReactivateAccountApiResponse = ApiEnvelope<{
+    nombreUsuario: string;
+    usuario: string;
+    correoElectronico: string;
+    token: string;
+    tipoToken: string;
+    expiracionMinutos: number;
+    fechaExpiracionUtc: string;
+    tokenConsumido: boolean;
+    reactivacionProcesada: boolean;
+}>;
+
+export type ResolveReactivationApiResponse = ApiEnvelope<{
+    usuario: string;
+    aceptado: boolean;
+    procesado: boolean;
+    contrasenaActualizada: boolean;
+    motivoNegacion?: string | null;
 }>;

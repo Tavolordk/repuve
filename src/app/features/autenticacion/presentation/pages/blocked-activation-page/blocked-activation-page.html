@@ -1,7 +1,6 @@
 <app-auth-shell [logoSrc]="'images/GOBMX.png'" [title]="'Registro Público Vehicular<br>REPUVE'"
     [subtitle]="'Sujetos obligados'">
 
-
     <form *ngIf="step === 'form'" class="activation-form" (ngSubmit)="submitActivation()">
 
         <div class="form-header">
@@ -10,7 +9,7 @@
         </div>
 
         <p class="form-subtitle">
-            Ingresa los datos asociados a tu cuenta para solicitar la activación.
+            Ingresa los datos asociados a tu cuenta para solicitar el desbloqueo.
         </p>
 
         <div class="field-block">
@@ -59,143 +58,26 @@
         </button>
     </form>
 
-
     <div *ngIf="step === 'request-sent'" class="result-step">
         <fa-icon class="result-icon" [icon]="faCircleCheck" aria-hidden="true"></fa-icon>
         <div class="result-title success-title">Solicitud enviada correctamente</div>
 
         <p class="result-text">
-            Tu solicitud de activación ha sido enviada al equipo de REPUVE.
+            Tu solicitud de desbloqueo ha sido enviada al equipo de REPUVE.
             Recibirás una respuesta por correo electrónico.
         </p>
 
         <div class="result-note">
             <fa-icon class="note-icon" [icon]="faCircleInfo" aria-hidden="true"></fa-icon>
             A partir de este momento deberás esperar a que el equipo de REPUVE revise y responda tu solicitud.
-            El aviso llegará a tu correo electrónico registrado.
         </div>
 
         <p class="result-text muted">
             Puedes cerrar esta pestaña de forma segura.
         </p>
     </div>
-
-
-    <div *ngIf="step === 'verify-code'" class="verification-step">
-
-        <div class="form-header">
-            <fa-icon class="form-header-icon" [icon]="faKey" aria-hidden="true"></fa-icon>
-            <span class="form-header-text">Validar código de verificación</span>
-        </div>
-
-        <p class="form-subtitle">
-            Ingresa el código de 6 dígitos que recibiste en tu correo electrónico.
-        </p>
-
-        <div class="code-countdown-wrapper" *ngIf="!codeExpired">
-            <div class="code-countdown-header">
-                <fa-icon class="code-countdown-icon" [icon]="faClock" aria-hidden="true"></fa-icon> <span
-                    class="code-countdown-label">Tiempo restante</span>
-                <span class="code-countdown-time" [class.urgent]="codeIsUrgent">
-                    {{ codeTimeLabel }}
-                </span>
-            </div>
-            <div class="code-progress-bar">
-                <div class="code-progress-fill" [class.urgent]="codeIsUrgent" [style.width.%]="codeProgressPercent">
-                </div>
-            </div>
-        </div>
-
-        <div class="code-expired-banner" *ngIf="codeExpired">
-            <fa-icon class="code-expired-icon" [icon]="faCircleExclamation" aria-hidden="true"></fa-icon>
-            <div class="code-expired-text">
-                <strong>El código ha expirado.</strong>
-                Solicita uno nuevo repitiendo el proceso de activación.
-            </div>
-        </div>
-
-        <div class="field-block">
-            <label class="field-label" for="usuario-verify">Cuenta de usuario</label>
-            <input id="usuario-verify" type="text" class="field-input" [value]="model.usuario" readonly />
-        </div>
-
-        <div class="field-block">
-            <input type="text" class="field-input verification-code-input" placeholder="Ingrese el código" maxlength="6"
-                [(ngModel)]="verificationCode" name="verificationCode" [disabled]="codeExpired" />
-        </div>
-
-        <div *ngIf="codeErrorMessage" class="error-box">{{ codeErrorMessage }}</div>
-
-        <div class="step-actions">
-            <button type="button" class="btn btn-outline-step" (click)="retryActivation()">
-                Regresar
-            </button>
-
-            <button type="button" class="btn btn-activate" (click)="validateCode()"
-                [disabled]="validating || verificationCode.length < 6 || codeExpired">
-                {{ validating ? 'Validando...' : 'Validar código' }}
-            </button>
-        </div>
-    </div>
-
-
-    <div *ngIf="step === 'done'" class="result-step">
-        <fa-icon class="result-icon" [icon]="faCircleCheck" aria-hidden="true"></fa-icon>
-        <div class="result-title success-title">Código validado correctamente</div>
-
-        <p class="result-text">
-            Tu contraseña temporal ha sido enviada a tu correo electrónico registrado.
-        </p>
-
-        <p class="result-text">
-            Utiliza esa contraseña para ingresar a la
-            <strong>Plataforma REPUVE – Sujetos Obligados</strong>.
-        </p>
-
-        <div class="result-note">
-            <fa-icon class="note-icon" [icon]="faCircleExclamation" aria-hidden="true"></fa-icon> Esta contraseña es de
-            uso temporal. Al ingresar por primera vez, la Plataforma te solicitará
-            cambiarla por una contraseña definitiva de tu elección.
-        </div>
-
-        <button type="button" class="btn btn-activate w-100" (click)="goToLogin()">
-            Ir a inicio de sesión
-        </button>
-    </div>
-
-
-    <div *ngIf="step === 'code-error'" class="result-step">
-        <fa-icon class="result-icon result-icon--error" [icon]="faCircleExclamation" aria-hidden="true"></fa-icon>
-        <div class="result-title error-title">Código inválido o expirado</div>
-
-        <p class="result-text">
-            {{ codeErrorMessage || 'El código ingresado no es válido o ha expirado.' }}
-        </p>
-
-        <p class="result-text muted">
-            Verifica haberlo escrito correctamente o solicita uno nuevo repitiendo
-            el proceso de activación.
-        </p>
-
-        <div class="step-actions">
-            <button type="button" class="btn btn-outline-step" (click)="retryActivation()">
-                Intentar de nuevo
-            </button>
-
-            <button type="button" class="btn btn-activate" (click)="goToLogin()">
-                Ir al inicio
-            </button>
-        </div>
-    </div>
-
 </app-auth-shell>
-
 
 <app-blocked-account-modal [isOpen]="blockedModalOpen && step === 'blocked-dialog'" (cancelled)="onBlockedCancel()"
     (activateRequested)="onBlockedActivate()">
 </app-blocked-account-modal>
-
-<app-access-feedback-modal [isOpen]="feedbackModal.isOpen" [variant]="feedbackModal.variant"
-    [message]="feedbackModal.message" [buttonText]="'Aceptar'" [showMailIcon]="false" (closed)="closeFeedbackModal()"
-    (accepted)="closeFeedbackModal()">
-</app-access-feedback-modal>
