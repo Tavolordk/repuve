@@ -1,0 +1,341 @@
+:host {
+  display: block;
+}
+
+.admin-container {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  min-height: 100vh;
+  background: #f8f8fa;
+}
+
+.admin-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.admin-logo {
+  max-width: 200px;
+  height: auto;
+  margin-bottom: 0.75rem;
+}
+
+.admin-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin: 0 0 0.25rem;
+}
+
+.admin-subtitle {
+  font-size: 0.95rem;
+  color: #666;
+  margin: 0;
+}
+
+.admin-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.btn-refresh {
+  border: 1px solid #7a123f;
+  background: #fff;
+  color: #7a123f;
+  border-radius: 999px;
+  padding: 8px 20px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.btn-refresh:hover:not(:disabled) {
+  background: rgba(122, 18, 63, 0.06);
+}
+
+.btn-refresh:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.admin-alert {
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.admin-alert--error {
+  background: rgba(180, 35, 24, 0.08);
+  border: 1px solid rgba(180, 35, 24, 0.14);
+  color: #b42318;
+}
+
+.admin-alert--success {
+  background: rgba(21, 128, 61, 0.08);
+  border: 1px solid rgba(21, 128, 61, 0.18);
+  color: #166534;
+}
+
+.admin-loading,
+.admin-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #888;
+  font-size: 0.95rem;
+}
+
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #7a123f;
+  margin: 1.5rem 0 0.75rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 2px solid rgba(122, 18, 63, 0.15);
+}
+
+.section-title--secondary {
+  color: #666;
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+  margin-top: 2.5rem;
+}
+
+.solicitud-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  border-left: 4px solid #7a123f;
+}
+
+.solicitud-card--processed {
+  border-left-color: #ccc;
+  opacity: 0.75;
+}
+
+.solicitud-data {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 1rem;
+}
+
+.solicitud-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.92rem;
+}
+
+.solicitud-label {
+  font-weight: 700;
+  color: #555;
+  min-width: 160px;
+  flex-shrink: 0;
+}
+
+.solicitud-value {
+  color: #222;
+  word-break: break-all;
+}
+
+.solicitud-badge {
+  display: inline-block;
+  padding: 2px 12px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.badge--accepted {
+  background: rgba(21, 128, 61, 0.12);
+  color: #166534;
+}
+
+.badge--denied {
+  background: rgba(180, 35, 24, 0.1);
+  color: #b42318;
+}
+
+.solicitud-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-accept,
+.btn-deny {
+  flex: 1;
+  height: 42px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.btn-accept {
+  border: none;
+  background: #166534;
+  color: #fff;
+}
+
+.btn-accept:hover:not(:disabled) {
+  background: #14532d;
+}
+
+.btn-accept:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-deny {
+  border: 1px solid #b42318;
+  background: #fff;
+  color: #b42318;
+}
+
+.btn-deny:hover:not(:disabled) {
+  background: rgba(180, 35, 24, 0.06);
+}
+
+.btn-deny:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.deny-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  background: rgba(0, 0, 0, 0.34);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.deny-modal-card {
+  position: relative;
+  width: min(100%, 480px);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+  padding: 1.75rem 1.5rem 1.35rem;
+  border-top: 4px solid #b42318;
+}
+
+.deny-modal-close {
+  position: absolute;
+  top: 0.65rem;
+  right: 0.85rem;
+  border: none;
+  background: transparent;
+  color: #888;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.deny-modal-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #b42318;
+  text-align: center;
+}
+
+.deny-modal-text {
+  margin: 0 0 1rem;
+  font-size: 0.92rem;
+  color: #444;
+  text-align: center;
+  line-height: 1.45;
+}
+
+.deny-modal-textarea {
+  width: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-size: 0.92rem;
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+  min-height: 100px;
+}
+
+.deny-modal-textarea:focus {
+  border-color: rgba(180, 35, 24, 0.35);
+  box-shadow: 0 0 0 0.15rem rgba(180, 35, 24, 0.1);
+}
+
+.deny-modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 1.2rem;
+}
+
+.btn-deny-cancel {
+  flex: 1;
+  height: 42px;
+  border: 1px solid #d0d5dd;
+  background: #fff;
+  color: #555;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.btn-deny-cancel:hover {
+  background: #f5f5f5;
+}
+
+.btn-deny-confirm {
+  flex: 1;
+  height: 42px;
+  border: none;
+  background: #b42318;
+  color: #fff;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.btn-deny-confirm:hover:not(:disabled) {
+  background: #991b1b;
+}
+
+.btn-deny-confirm:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 767.98px) {
+  .admin-container {
+    padding: 1rem;
+  }
+
+  .solicitud-row {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .solicitud-label {
+    min-width: unset;
+    font-size: 0.82rem;
+  }
+
+  .solicitud-actions {
+    flex-direction: column;
+  }
+
+  .deny-modal-actions {
+    flex-direction: column;
+  }
+}

@@ -1,0 +1,118 @@
+<div class="admin-container">
+
+    <header class="admin-header">
+        <img class="admin-logo" src="images/GOBMX.png" alt="Logo institucional" />
+        <h1 class="admin-title">Administración REPUVE</h1>
+        <p class="admin-subtitle">Solicitudes de activación de cuentas bloqueadas</p>
+    </header>
+
+    <div class="admin-toolbar">
+        <button type="button" class="btn-refresh" (click)="loadSolicitudes()" [disabled]="loading">
+            {{ loading ? 'Cargando...' : 'Actualizar lista' }}
+        </button>
+    </div>
+
+    <div *ngIf="errorMessage" class="admin-alert admin-alert--error">{{ errorMessage }}</div>
+    <div *ngIf="successMessage" class="admin-alert admin-alert--success">{{ successMessage }}</div>
+
+    <div *ngIf="loading" class="admin-loading">
+        Cargando solicitudes...
+    </div>
+
+    <div *ngIf="!loading && solicitudes.length === 0" class="admin-empty">
+        No hay solicitudes de activación en este momento.
+    </div>
+
+    <ng-container *ngIf="!loading && pendientes.length > 0">
+        <h2 class="section-title">Solicitudes pendientes</h2>
+
+        <div class="solicitud-card" *ngFor="let solicitud of pendientes">
+            <div class="solicitud-data">
+                <div class="solicitud-row">
+                    <span class="solicitud-label">Nombre de usuario:</span>
+                    <span class="solicitud-value">{{ solicitud.nombre || '—' }}</span>
+                </div>
+                <div class="solicitud-row">
+                    <span class="solicitud-label">Cuenta de usuario:</span>
+                    <span class="solicitud-value">{{ solicitud.usuario }}</span>
+                </div>
+                <div class="solicitud-row">
+                    <span class="solicitud-label">Correo electrónico:</span>
+                    <span class="solicitud-value">{{ solicitud.correoElectronico }}</span>
+                </div>
+                <div class="solicitud-row">
+                    <span class="solicitud-label">Número de celular:</span>
+                    <span class="solicitud-value">{{ solicitud.numeroCelular || '—' }}</span>
+                </div>
+                <div class="solicitud-row">
+                    <span class="solicitud-label">Fecha de solicitud:</span>
+                    <span class="solicitud-value">{{ solicitud.fechaSolicitud }}</span>
+                </div>
+            </div>
+
+            <div class="solicitud-actions">
+                <button type="button" class="btn-accept" (click)="acceptRequest(solicitud)"
+                    [disabled]="processingAcceptId === solicitud.solicitudId">
+                    {{ processingAcceptId === solicitud.solicitudId ? 'Procesando...' : 'Aceptar' }}
+                </button>
+
+                <button type="button" class="btn-deny" (click)="openDenyModal(solicitud)"
+                    [disabled]="!!processingAcceptId">
+                    Denegar
+                </button>
+            </div>
+        </div>
+    </ng-container>
+
+    <ng-container *ngIf="!loading && procesadas.length > 0">
+        <h2 class="section-title section-title--secondary">Solicitudes procesadas</h2>
+
+        <div class="solicitud-card solicitud-card--processed" *ngFor="let solicitud of procesadas">
+            <div class="solicitud-data">
+                <div class="solicitud-row">
+                    <span class="solicitud-label">Cuenta:</span>
+                    <span class="solicitud-value">{{ solicitud.usuario }}</span>
+                </div>
+                <div class="solicitud-row">
+                    <span class="solicitud-label">Correo:</span>
+                    <span class="solicitud-value">{{ solicitud.correoElectronico }}</span>
+                </div>
+                <div class="solicitud-row">
+                    <span class="solicitud-label">Estado:</span>
+                    <span class="solicitud-badge" [class.badge--accepted]="solicitud.estado === 'aceptada'"
+                        [class.badge--denied]="solicitud.estado === 'denegada'">
+                        {{ solicitud.estado === 'aceptada' ? 'Aceptada' : 'Denegada' }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </ng-container>
+</div>
+
+@if (denyModalOpen) {
+<div class="deny-modal-backdrop" (click)="$event.target === $event.currentTarget && closeDenyModal()">
+    <div class="deny-modal-card">
+        <button type="button" class="deny-modal-close" aria-label="Cerrar" (click)="closeDenyModal()">×</button>
+
+        <h3 class="deny-modal-title">Denegar solicitud</h3>
+        <p class="deny-modal-text">
+            Escribe el motivo por el cual se deniega la activación de la cuenta
+            <strong>{{ denySolicitudUsuario }}</strong>.
+        </p>
+
+        <textarea class="deny-modal-textarea" rows="4" placeholder="Motivo de denegación..." [(ngModel)]="denyReason"
+            name="denyReason">
+        </textarea>
+
+        <div class="deny-modal-actions">
+            <button type="button" class="btn-deny-cancel" (click)="closeDenyModal()">
+                Cancelar
+            </button>
+            <button type="button" class="btn-deny-confirm" (click)="confirmDeny()"
+                [disabled]="processingDeny || !denyReason.trim()">
+                {{ processingDeny ? 'Enviando...' : 'Confirmar denegación' }}
+            </button>
+        </div>
+    </div>
+</div>
+}

@@ -1,0 +1,24 @@
+@if (isOpen) {
+<div class="blocked-modal-backdrop" (click)="onBackdropClick($event)">
+    <div class="blocked-modal-card">
+
+        <div class="blocked-modal-icon">
+            <span class="blocked-modal-icon-emoji" aria-hidden="true">🔒</span>
+        </div>
+
+        <div class="blocked-modal-body">
+            <p class="blocked-modal-title">Cuenta bloqueada</p>
+            <p class="blocked-modal-message">{{ message }}</p>
+        </div>
+
+        <div class="blocked-modal-actions">
+            <button type="button" class="blocked-modal-btn blocked-modal-btn--cancel" (click)="cancel()">
+                Cancelar
+            </button>
+            <button type="button" class="blocked-modal-btn blocked-modal-btn--activate" (click)="activate()">
+                Activar cuenta
+            </button>
+        </div>
+    </div>
+</div>
+}

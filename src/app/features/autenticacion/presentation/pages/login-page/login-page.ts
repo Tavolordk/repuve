@@ -287,7 +287,6 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.submitting = true;
     this.normalizeToUpperCase();
 
-    // Página 7: si es flujo de validación de usuario existente, se usa un camino distinto.
     if (this.isExistingUserFlow) {
       this.validateExistingUser();
       return;
@@ -312,7 +311,6 @@ export class LoginComponent implements OnInit, OnDestroy {
           fechaExpiracionUtc: response.fechaExpiracionUtc
         };
 
-        // Página 2: mensaje con mejor redacción (se arma en la propia modal).
         this.openSuccessModal(
           response.mensaje || 'Enviamos un enlace de verificación a tu correo para activar tu nueva cuenta.',
           'success-new-account'
@@ -327,20 +325,25 @@ export class LoginComponent implements OnInit, OnDestroy {
           error?.message ||
           'No se pudo completar la solicitud.';
 
-        // Página 4: mensaje de error cuando no existe la cuenta (el modal se encarga del texto detallado).
+        const isBloqueada =
+          error?.status === 423 ||
+          error?.error?.cuentaBloqueada === true ||
+          error?.error?.data?.cuentaBloqueada === true;
+
+        if (isBloqueada) {
+          this.router.navigate(['/cuenta-bloqueada']);
+          return;
+        }
+
         this.openErrorModal(backendMessage);
         this.loadCaptcha();
       }
     });
   }
 
-  /**
-   * Página 7: al dar clic en "Validar usuario" se confirma que la cuenta existe;
-   * al aceptar el modal se navega automáticamente a verification-code (Página 8).
-   */
+
   private validateExistingUser(): void {
-    // TODO(backend): reemplazar por un endpoint real de validación de usuario si existe.
-    // De momento reutilizamos el método existente para no romper la integración.
+
     this.authFacade.login(this.model).pipe(
       timeout(15000),
       finalize(() => {
@@ -351,8 +354,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       next: (response) => {
         this.authSessionService.saveSession(response);
 
-        // En el flujo de "validar usuario existente" correo y celular no se capturan
-        // en el front; el backend los resolverá al enviar el código de verificación.
+
         this.verificationStepData = {
           usuario: this.model.usuario,
           correoElectronico: '',
@@ -371,6 +373,16 @@ export class LoginComponent implements OnInit, OnDestroy {
           error?.error?.mensaje ||
           error?.message ||
           'No se pudo validar el usuario.';
+
+        const isBloqueada =
+          error?.status === 423 ||
+          error?.error?.cuentaBloqueada === true ||
+          error?.error?.data?.cuentaBloqueada === true;
+
+        if (isBloqueada) {
+          this.router.navigate(['/cuenta-bloqueada']);
+          return;
+        }
 
         this.openErrorModal(backendMessage);
         this.loadCaptcha();

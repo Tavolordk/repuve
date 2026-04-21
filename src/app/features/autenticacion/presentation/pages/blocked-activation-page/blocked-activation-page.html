@@ -1,0 +1,185 @@
+<app-auth-shell [logoSrc]="'images/GOBMX.png'" [title]="'Registro Público Vehicular<br>REPUVE'"
+    [subtitle]="'Sujetos obligados'">
+
+
+    <form *ngIf="step === 'form'" class="activation-form" (ngSubmit)="submitActivation()">
+
+        <div class="form-header">
+            <span class="form-header-icon" aria-hidden="true">🔓</span>
+            <span class="form-header-text">Activación de cuenta bloqueada</span>
+        </div>
+
+        <p class="form-subtitle">
+            Ingresa los datos asociados a tu cuenta para solicitar la activación.
+        </p>
+
+        <div class="field-block">
+            <label class="field-label" for="usuario">Cuenta de usuario</label>
+            <input id="usuario" name="usuario" type="text" class="field-input" [(ngModel)]="model.usuario" required />
+        </div>
+
+        <div class="field-block">
+            <label class="field-label" for="correoElectronico">Correo electrónico asociado</label>
+            <input id="correoElectronico" name="correoElectronico" type="email" class="field-input"
+                [(ngModel)]="model.correoElectronico" required />
+        </div>
+
+        <div class="captcha-wrapper">
+            <div *ngIf="loadingCaptcha" class="captcha-loading">Cargando captcha...</div>
+
+            <ng-container *ngIf="!loadingCaptcha && captchaImageSrc">
+                <img class="captcha-image" [src]="captchaImageSrc" alt="Captcha" />
+                <div class="captcha-expiry">Expira en: {{ captchaTimeLabel }}</div>
+            </ng-container>
+
+            <div *ngIf="captchaExpired && !loadingCaptcha" class="captcha-expired">
+                El captcha expiró. Solicita uno nuevo.
+            </div>
+
+            <button type="button" class="refresh-link" (click)="loadCaptcha()" [disabled]="loadingCaptcha">
+                {{ loadingCaptcha ? 'Cargando...' : 'Refrescar código' }}
+            </button>
+        </div>
+
+        <div class="field-block">
+            <input id="captchaRespuesta" name="captchaRespuesta" type="text" class="field-input"
+                placeholder="Ingrese el código del captcha" [(ngModel)]="model.captchaRespuesta"
+                [disabled]="loadingCaptcha || captchaExpired || !model.captchaId" />
+        </div>
+
+        <div *ngIf="errorMessage" class="error-box">{{ errorMessage }}</div>
+
+        <button type="submit" class="btn btn-activate w-100"
+            [disabled]="submitting || loadingCaptcha || captchaExpired || !model.captchaId">
+            {{ submitting ? 'Enviando solicitud...' : 'Activar cuenta' }}
+        </button>
+
+        <button type="button" class="btn btn-cancel-link" (click)="goToLogin()">
+            Cancelar
+        </button>
+    </form>
+
+
+    <div *ngIf="step === 'request-sent'" class="result-step">
+        <div class="result-icon" aria-hidden="true">✅</div>
+
+        <div class="result-title success-title">Solicitud enviada correctamente</div>
+
+        <p class="result-text">
+            Tu solicitud de activación ha sido enviada al equipo de REPUVE.
+            Recibirás una respuesta por correo electrónico.
+        </p>
+
+        <div class="result-note">
+            <span class="note-icon" aria-hidden="true">ℹ️</span>
+            A partir de este momento deberás esperar a que el equipo de REPUVE revise y responda tu solicitud.
+            El aviso llegará a tu correo electrónico registrado.
+        </div>
+
+        <p class="result-text muted">
+            Puedes cerrar esta pestaña de forma segura.
+        </p>
+    </div>
+
+    <div *ngIf="step === 'verify-code'" class="verification-step">
+
+        <div class="form-header">
+            <span class="form-header-icon" aria-hidden="true">🔑</span>
+            <span class="form-header-text">Validar código de verificación</span>
+        </div>
+
+        <p class="form-subtitle">
+            Ingresa el código de 6 dígitos que recibiste en tu correo electrónico.
+        </p>
+
+        <div class="verification-note">
+            <span class="note-icon" aria-hidden="true">⚠️</span>
+            El código de verificación tiene una validez de <strong>5 minutos</strong>.
+            Si no lo ingresas en ese tiempo, deberás solicitar uno nuevo.
+        </div>
+
+        <div class="field-block">
+            <label class="field-label" for="usuario-verify">Cuenta de usuario</label>
+            <input id="usuario-verify" type="text" class="field-input" [value]="model.usuario" readonly />
+        </div>
+
+        <div class="field-block">
+            <input type="text" class="field-input verification-code-input" placeholder="Ingrese el código" maxlength="6"
+                [(ngModel)]="verificationCode" name="verificationCode" />
+        </div>
+
+        <div *ngIf="codeErrorMessage" class="error-box">{{ codeErrorMessage }}</div>
+
+        <div class="step-actions">
+            <button type="button" class="btn btn-outline-step" (click)="retryActivation()">
+                Regresar
+            </button>
+
+            <button type="button" class="btn btn-activate" (click)="validateCode()"
+                [disabled]="validating || verificationCode.length < 6">
+                {{ validating ? 'Validando...' : 'Validar código' }}
+            </button>
+        </div>
+    </div>
+
+
+    <div *ngIf="step === 'done'" class="result-step">
+        <div class="result-icon" aria-hidden="true">✅</div>
+
+        <div class="result-title success-title">Código validado correctamente</div>
+
+        <p class="result-text">
+            Tu contraseña temporal ha sido enviada a tu correo electrónico registrado.
+        </p>
+
+        <p class="result-text">
+            Utiliza esa contraseña para ingresar a la
+            <strong>Plataforma REPUVE – Sujetos Obligados</strong>.
+        </p>
+
+        <div class="result-note">
+            <span class="note-icon" aria-hidden="true">⚠️</span>
+            Esta contraseña es de uso temporal. Al ingresar por primera vez, la Plataforma te solicitará
+            cambiarla por una contraseña definitiva de tu elección.
+        </div>
+
+        <button type="button" class="btn btn-activate w-100" (click)="goToLogin()">
+            Ir a inicio de sesión
+        </button>
+    </div>
+
+    <div *ngIf="step === 'code-error'" class="result-step">
+        <div class="result-icon" aria-hidden="true">❌</div>
+
+        <div class="result-title error-title">Código inválido o expirado</div>
+
+        <p class="result-text">
+            {{ codeErrorMessage || 'El código ingresado no es válido o ha expirado.' }}
+        </p>
+
+        <p class="result-text muted">
+            Verifica haberlo escrito correctamente o solicita uno nuevo repitiendo
+            el proceso de activación.
+        </p>
+
+        <div class="step-actions">
+            <button type="button" class="btn btn-outline-step" (click)="retryActivation()">
+                Intentar de nuevo
+            </button>
+
+            <button type="button" class="btn btn-activate" (click)="goToLogin()">
+                Ir al inicio
+            </button>
+        </div>
+    </div>
+
+</app-auth-shell>
+
+<app-blocked-account-modal [isOpen]="blockedModalOpen && step === 'blocked-dialog'" (cancelled)="onBlockedCancel()"
+    (activateRequested)="onBlockedActivate()">
+</app-blocked-account-modal>
+
+<app-access-feedback-modal [isOpen]="feedbackModal.isOpen" [variant]="feedbackModal.variant"
+    [message]="feedbackModal.message" [buttonText]="'Aceptar'" [showMailIcon]="false" (closed)="closeFeedbackModal()"
+    (accepted)="closeFeedbackModal()">
+</app-access-feedback-modal>
