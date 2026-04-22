@@ -31,7 +31,6 @@
   color: #222;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   box-sizing: border-box;
-  text-transform: uppercase;
 }
 
 .field-input::placeholder {
@@ -78,7 +77,6 @@
   font-size: 0.95rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   box-sizing: border-box;
-  text-transform: uppercase;
 }
 
 .captcha-wrapper {
@@ -352,5 +350,12 @@
   .verification-code-input {
     letter-spacing: 0.3rem;
     font-size: 1rem;
+  }
+  .captcha-input {
+    text-transform: uppercase;
+  }
+
+  .captcha-input::placeholder {
+    text-transform: none;
   }
 }

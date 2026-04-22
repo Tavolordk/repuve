@@ -116,11 +116,6 @@ export class LoginComponent implements OnInit, OnDestroy {
     if (matchesExistingAccountLength !== this.isExistingUserFlow) {
       this.isExistingUserFlow = matchesExistingAccountLength;
       this.userValidated = false;
-      if (this.isExistingUserFlow) {
-        // Ya no son necesarios al validar usuario existente
-        this.model.correoElectronico = '';
-        this.model.numeroCelular = '';
-      }
     }
   }
 
@@ -275,7 +270,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 
     this.errorMessage = '';
     this.submitting = true;
-    this.normalizeToUpperCase();
+    this.normalizeCaptchaToUpperCase();
 
     if (this.isExistingUserFlow) {
       this.validateExistingUser();
@@ -458,12 +453,8 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   /** Normaliza todos los campos de texto del modelo a mayúsculas. */
-  private normalizeToUpperCase(): void {
-    this.model.usuario = (this.model.usuario ?? '').toUpperCase();
-    this.model.correoElectronico = (this.model.correoElectronico ?? '').toUpperCase();
-    this.model.numeroCelular = (this.model.numeroCelular ?? '').toUpperCase();
+  private normalizeCaptchaToUpperCase(): void {
     this.model.captchaRespuesta = (this.model.captchaRespuesta ?? '').toUpperCase();
-    this.verificationCode = (this.verificationCode ?? '').toUpperCase();
   }
 
   private maskEmail(email: string): string {
@@ -517,7 +508,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 
     this.errorMessage = '';
     this.sendingVerificationCode = true;
-    this.normalizeToUpperCase();
+    this.normalizeCaptchaToUpperCase();
 
     this.authFacade.sendVerificationCode({
       usuario: this.verificationStepData.usuario,
@@ -533,21 +524,26 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       })
     ).subscribe({
-      next: (response) => {
-        // Página 9: calcular destino enmascarado según canal.
+      next: () => {
         this.maskedContact = this.verificationChannel === 'email'
           ? this.maskEmail(this.verificationStepData.correoElectronico)
           : this.maskPhone(this.verificationStepData.numeroCelular);
-        this.verificationCodeSent = true;
 
-        // Iniciar temporizador regresivo de 5 minutos
+        this.verificationCodeSent = true;
+        this.verificationCode = '';
+        this.errorMessage = '';
+
         this.startVerificationTimer();
 
-        this.openSuccessModal(
-          response.mensaje || 'El código de verificación fue enviado correctamente.',
-          'info'
-        );
-        this.loadCaptcha();
+        // limpiar captcha porque ya no se usa en la validación
+        this.model.captchaId = '';
+        this.model.captchaRespuesta = '';
+        this.captchaImageSrc = '';
+        this.captchaExpired = false;
+        this.captchaTtlSeconds = 0;
+        this.stopCountdown();
+
+        this.cdr.detectChanges();
       },
       error: (error) => {
         this.errorMessage =
@@ -569,7 +565,6 @@ export class LoginComponent implements OnInit, OnDestroy {
 
     this.errorMessage = '';
     this.validatingVerificationCode = true;
-    this.normalizeToUpperCase();
 
     this.authFacade.verifyCode({
       usuario: this.verificationStepData.usuario,
@@ -589,10 +584,8 @@ export class LoginComponent implements OnInit, OnDestroy {
         }
 
         this.currentStep = 'done';
-        this.openSuccessModal(
-          response.mensaje || 'La validación se realizó correctamente.',
-          'info'
-        );
+        this.errorMessage = '';
+        this.cdr.detectChanges();
       },
       error: (error) => {
         this.errorMessage =

@@ -27,7 +27,7 @@ export class AccountActivationPageComponent implements OnInit, OnDestroy {
     private readonly router = inject(Router);
     private readonly authFacade = inject(AuthFacade);
     private readonly cdr = inject(ChangeDetectorRef);
-
+    codeSent = false;
     step: PageStep = 'loading';
     usuario = '';
     errorMessage = '';
@@ -195,6 +195,9 @@ export class AccountActivationPageComponent implements OnInit, OnDestroy {
             })
         ).subscribe({
             next: (response) => {
+                this.codeSent = true;
+                this.errorMessage = '';
+                this.verificationCode = '';
                 this.successMessage = response.mensaje || 'Código enviado correctamente.';
                 this.loadCaptcha();
             },
@@ -249,5 +252,12 @@ export class AccountActivationPageComponent implements OnInit, OnDestroy {
                 this.verificationCode = '';
             }
         });
+    }
+    goBackToSendCode(): void {
+        this.codeSent = false;
+        this.verificationCode = '';
+        this.errorMessage = '';
+        this.successMessage = '';
+        this.loadCaptcha();
     }
 }
