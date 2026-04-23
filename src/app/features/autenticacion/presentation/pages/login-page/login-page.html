@@ -61,7 +61,7 @@
 
             <button type="submit" class="btn btn-login w-100"
                 [disabled]="submitting || loadingCaptcha || captchaExpired || !model.captchaId">
-                {{ submitting ? 'Procesando...' : (isExistingUserFlow ? 'Validar usuario' : 'Crear cuenta') }}
+                {{ submitting ? 'Procesando...' : (isExistingUserFlow ? 'Generar contraseña' : 'Crear cuenta') }}
             </button>
         </form>
 
