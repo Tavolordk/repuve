@@ -51,12 +51,10 @@ export class LoginComponent implements OnInit, OnDestroy {
   sendingVerificationCode = false;
   validatingVerificationCode = false;
 
-  // Temporizador regresivo de código de verificación (5 minutos)
   verificationTimerSeconds = 0;
   verificationTimerExpired = false;
   private verificationTimerIntervalId: ReturnType<typeof setInterval> | null = null;
 
-  // Página 7: bandera que indica si el usuario capturado proviene del correo
   isExistingUserFlow = false;
   userValidated = false;
 
@@ -104,11 +102,6 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.stopVerificationTimer();
   }
 
-  /**
-   * Página 7: al escribir el usuario, si la longitud coincide con la de una cuenta
-   * recibida por correo, se activa el flujo de "validar usuario existente":
-   * se ocultan correo y celular y cambia el botón a "Validar usuario".
-   */
   onUsuarioChange(value: string): void {
     const trimmed = (value ?? '').trim();
     const matchesExistingAccountLength = trimmed.length === EXISTING_USER_ACCOUNT_LENGTH;
@@ -207,17 +200,15 @@ export class LoginComponent implements OnInit, OnDestroy {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   }
 
-  /** Etiqueta del temporizador regresivo de código de verificación (mm:ss). */
   get verificationTimerLabel(): string {
     const minutes = Math.floor(this.verificationTimerSeconds / 60);
     const seconds = this.verificationTimerSeconds % 60;
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   }
 
-  /** Inicia el temporizador regresivo de 5 minutos para el código de verificación. */
   private startVerificationTimer(): void {
     this.stopVerificationTimer();
-    this.verificationTimerSeconds = 5 * 60; // 5 minutos
+    this.verificationTimerSeconds = 5 * 60;
     this.verificationTimerExpired = false;
 
     this.verificationTimerIntervalId = setInterval(() => {
@@ -242,7 +233,6 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** Permite reenviar el código de verificación volviendo a la fase 1. */
   resendVerificationCode(): void {
     this.verificationCodeSent = false;
     this.verificationCode = '';
@@ -304,21 +294,15 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       },
       error: (error) => {
+        if (this.handleBlockedAccountError(error)) {
+          return;
+        }
+
         const backendMessage =
           error?.error?.message ||
           error?.error?.mensaje ||
           error?.message ||
           'No se pudo completar la solicitud.';
-
-        const isBloqueada =
-          error?.status === 423 ||
-          error?.error?.cuentaBloqueada === true ||
-          error?.error?.data?.cuentaBloqueada === true;
-
-        if (isBloqueada) {
-          this.router.navigate(['/cuenta-bloqueada']);
-          return;
-        }
 
         this.openErrorModal(backendMessage);
         this.loadCaptcha();
@@ -353,21 +337,15 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.openUserValidatedModal();
       },
       error: (error) => {
+        if (this.handleBlockedAccountError(error)) {
+          return;
+        }
+
         const backendMessage =
           error?.error?.message ||
           error?.error?.mensaje ||
           error?.message ||
           'No se pudo validar el usuario.';
-
-        const isBloqueada =
-          error?.status === 423 ||
-          error?.error?.cuentaBloqueada === true ||
-          error?.error?.data?.cuentaBloqueada === true;
-
-        if (isBloqueada) {
-          this.router.navigate(['/cuenta-bloqueada']);
-          return;
-        }
 
         this.openErrorModal(backendMessage);
         this.loadCaptcha();
@@ -377,11 +355,6 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   closeModal(): void {
     if (!this.modalState.isOpen) return;
-
-    // Página 4 — Bug corregido:
-    // antes se llamaba a openActivationTabAndShowCloseMessage() en toda ocasión,
-    // lo que mostraba la pantalla "Proceso iniciado correctamente" aun cuando la modal
-    // era un error. Ahora la acción depende del `intent` de la modal.
     this.handleModalDismiss();
   }
 
@@ -392,18 +365,15 @@ export class LoginComponent implements OnInit, OnDestroy {
   private handleModalDismiss(): void {
     const intent = this.modalState.intent;
 
-    // Cerrar siempre el modal
     this.modalState.isOpen = false;
 
     switch (intent) {
       case 'success-new-account':
-        // Mostrar la pantalla "Proceso iniciado correctamente" (Página 3).
         this.showCloseTabMessage = true;
         this.currentStep = 'done';
         break;
 
       case 'user-validated':
-        // Página 8: ir automáticamente a la pantalla de código de verificación.
         this.verificationCode = '';
         this.verificationCodeSent = false;
         this.maskedContact = '';
@@ -414,7 +384,6 @@ export class LoginComponent implements OnInit, OnDestroy {
       case 'error':
       case 'info':
       default:
-        // Bug Página 4: NO navegar, solo cerrar la modal y permanecer en Login.
         break;
     }
 
@@ -441,7 +410,30 @@ export class LoginComponent implements OnInit, OnDestroy {
     };
   }
 
-  /** Página 7: modal "✅ Usuario válido" con botón Aceptar. */
+  /**
+   * Detecta una respuesta de cuenta bloqueada y navega DIRECTAMENTE a la
+   * pantalla de cuenta bloqueada, sin abrir ningún modal intermedio.
+   */
+  private handleBlockedAccountError(error: unknown): boolean {
+    const err = error as {
+      status?: number;
+      error?: { cuentaBloqueada?: boolean; data?: { cuentaBloqueada?: boolean } };
+    };
+
+    const isBloqueada =
+      err?.status === 423 ||
+      err?.error?.cuentaBloqueada === true ||
+      err?.error?.data?.cuentaBloqueada === true;
+
+    if (!isBloqueada) {
+      return false;
+    }
+
+    this.modalState.isOpen = false;
+    this.router.navigate(['/cuenta-bloqueada']);
+    return true;
+  }
+
   private openUserValidatedModal(): void {
     this.modalState = {
       isOpen: true,
@@ -452,7 +444,6 @@ export class LoginComponent implements OnInit, OnDestroy {
     };
   }
 
-  /** Normaliza todos los campos de texto del modelo a mayúsculas. */
   private normalizeCaptchaToUpperCase(): void {
     this.model.captchaRespuesta = (this.model.captchaRespuesta ?? '').toUpperCase();
   }
@@ -477,7 +468,6 @@ export class LoginComponent implements OnInit, OnDestroy {
     return `${localPart[0]}*****${localPart[localPart.length - 1]}@${domain}`;
   }
 
-  /** Página 9: enmascara un número de teléfono manteniendo primeros 2 y últimos 2 dígitos. */
   private maskPhone(phone: string): string {
     const digits = (phone ?? '').replace(/\D/g, '');
     if (!digits) return '';
@@ -506,18 +496,52 @@ export class LoginComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Validación del campo dinámico según el canal seleccionado.
+    const correoInput = (this.verificationStepData.correoElectronico ?? '').trim();
+    const celularInput = (this.verificationStepData.numeroCelular ?? '').replace(/\D/g, '');
+
+    if (this.verificationChannel === 'email') {
+      if (!correoInput) {
+        this.errorMessage = 'Ingresa el correo electrónico para recibir el código.';
+        return;
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(correoInput)) {
+        this.errorMessage = 'Ingresa un correo electrónico válido.';
+        return;
+      }
+    } else {
+      if (!celularInput) {
+        this.errorMessage = 'Ingresa el número de celular para recibir el código por Telegram.';
+        return;
+      }
+
+      if (celularInput.length !== 10) {
+        this.errorMessage = 'El número de celular debe tener 10 dígitos.';
+        return;
+      }
+    }
+
+    this.verificationStepData.correoElectronico = correoInput;
+    this.verificationStepData.numeroCelular = celularInput;
+
     this.errorMessage = '';
     this.sendingVerificationCode = true;
     this.normalizeCaptchaToUpperCase();
 
+    // Bearer token recibido en el paso previo (login / validateExistingUser).
+    const bearerToken =
+      this.verificationStepData.token || this.authSessionService.getToken() || undefined;
+
     this.authFacade.sendVerificationCode({
       usuario: this.verificationStepData.usuario,
-      correoElectronico: this.verificationStepData.correoElectronico || null,
-      numeroCelular: this.verificationStepData.numeroCelular || null,
+      correoElectronico: this.verificationChannel === 'email' ? correoInput : null,
+      numeroCelular: this.verificationChannel === 'telegram' ? celularInput : null,
       medioContacto: this.verificationChannel === 'email' ? 'correo' : 'telegram',
       captchaId: this.model.captchaId,
       captchaRespuesta: this.model.captchaRespuesta
-    }).pipe(
+    }, bearerToken).pipe(
       timeout(15000),
       finalize(() => {
         this.sendingVerificationCode = false;
@@ -535,7 +559,6 @@ export class LoginComponent implements OnInit, OnDestroy {
 
         this.startVerificationTimer();
 
-        // limpiar captcha porque ya no se usa en la validación
         this.model.captchaId = '';
         this.model.captchaRespuesta = '';
         this.captchaImageSrc = '';
@@ -546,6 +569,10 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       },
       error: (error) => {
+        if (this.handleBlockedAccountError(error)) {
+          return;
+        }
+
         this.errorMessage =
           error?.error?.mensaje ||
           error?.message ||
@@ -566,11 +593,14 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.errorMessage = '';
     this.validatingVerificationCode = true;
 
+    const bearerToken =
+      this.verificationStepData.token || this.authSessionService.getToken() || undefined;
+
     this.authFacade.verifyCode({
       usuario: this.verificationStepData.usuario,
       codigo: this.verificationCode.trim().toUpperCase(),
       medioContacto: this.verificationChannel === 'email' ? 'correo' : 'telegram'
-    }).pipe(
+    }, bearerToken).pipe(
       timeout(15000),
       finalize(() => {
         this.validatingVerificationCode = false;
@@ -588,6 +618,10 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       },
       error: (error) => {
+        if (this.handleBlockedAccountError(error)) {
+          return;
+        }
+
         this.errorMessage =
           error?.error?.mensaje ||
           error?.message ||

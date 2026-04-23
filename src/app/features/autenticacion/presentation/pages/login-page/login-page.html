@@ -7,7 +7,6 @@
                 <label class="field-label" for="usuario">Cuenta de usuario</label>
                 <input id="usuario" name="usuario" type="text" class="field-input" [(ngModel)]="model.usuario"
                     (ngModelChange)="onUsuarioChange($event)" />
-                <!-- Page 7: show validated state when user length matches and validated -->
                 <div *ngIf="isExistingUserFlow && userValidated" class="user-validated-hint">
                     <fa-icon class="user-validated-icon" [icon]="faCircleCheck" aria-hidden="true"></fa-icon>
                     Usuario validado
@@ -60,7 +59,6 @@
                 {{ errorMessage }}
             </div>
 
-            <!-- Page 7: button label changes based on flow -->
             <button type="submit" class="btn btn-login w-100"
                 [disabled]="submitting || loadingCaptcha || captchaExpired || !model.captchaId">
                 {{ submitting ? 'Procesando...' : (isExistingUserFlow ? 'Validar usuario' : 'Crear cuenta') }}
@@ -97,6 +95,22 @@
                         (click)="selectVerificationChannel('telegram')">
                         Telegram
                     </button>
+                </div>
+
+                <!-- Campo dinámico según el canal seleccionado -->
+                <div *ngIf="verificationChannel === 'email'" class="field-block compact">
+                    <label class="field-label" for="verificationEmail">Correo electrónico</label>
+                    <input id="verificationEmail" name="verificationEmail" type="email" class="field-input"
+                        placeholder="ejemplo@correo.com" [(ngModel)]="verificationStepData.correoElectronico" />
+                </div>
+
+                <div *ngIf="verificationChannel === 'telegram'" class="field-block compact">
+                    <label class="field-label" for="verificationPhone">Número de celular</label>
+                    <div class="phone-row">
+                        <div class="phone-prefix">+52</div>
+                        <input id="verificationPhone" name="verificationPhone" type="text" class="phone-input"
+                            placeholder="10 dígitos" [(ngModel)]="verificationStepData.numeroCelular" />
+                    </div>
                 </div>
 
                 <div class="captcha-wrapper compact-captcha">
@@ -198,7 +212,6 @@
             </ng-container>
         </div>
 
-        <!-- Page 3: redesigned "Proceso iniciado correctamente" panel -->
         <div *ngSwitchCase="'done'" class="verification-step">
             <div class="verification-title success-title">
                 <fa-icon class="success-icon" [icon]="faCircleCheck" aria-hidden="true"></fa-icon> Proceso iniciado
