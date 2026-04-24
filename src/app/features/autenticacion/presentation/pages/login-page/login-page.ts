@@ -394,10 +394,6 @@ export class LoginComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Nota: el flujo de "generar contraseña" ya no usa este submit porque
-    // su step de acceso fue eliminado; por eso no hay rama para
-    // `isExistingUserFlow` aquí. Si por cualquier motivo se llega a este
-    // método en ese modo (por ejemplo, un caché de template viejo), se corta.
     if (this.isExistingUserFlow) {
       this.submitting = false;
       return;
@@ -434,9 +430,6 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       },
       error: (error) => {
-        if (this.handleBlockedAccountError(error)) {
-          return;
-        }
 
         const backendMessage =
           error?.error?.message ||
@@ -770,5 +763,60 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   goToLogin(): void {
     this.router.navigate(['/inicio']);
+  }
+  private extractBackendErrorMessage(error: unknown, fallbackMessage: string): string {
+    const err = error as {
+      message?: string;
+      error?: {
+        title?: string;
+        message?: string;
+        mensaje?: string;
+        errors?: Record<string, string[] | string>;
+      };
+    };
+
+    const validationErrors = err?.error?.errors;
+
+    if (validationErrors && typeof validationErrors === 'object') {
+      const messages = Object.entries(validationErrors)
+        .flatMap(([field, value]) => {
+          const fieldLabel = this.toReadableFieldName(field);
+          const fieldMessages = Array.isArray(value) ? value : [value];
+
+          return fieldMessages
+            .filter((message): message is string => typeof message === 'string' && !!message.trim())
+            .map((message) => `${fieldLabel}: ${message.trim()}`);
+        });
+
+      if (messages.length > 0) {
+        return messages.join('\n');
+      }
+    }
+
+    return (
+      err?.error?.mensaje ||
+      err?.error?.message ||
+      err?.error?.title ||
+      err?.message ||
+      fallbackMessage
+    );
+  }
+
+  private toReadableFieldName(field: string): string {
+    const normalizedField = (field ?? '').trim();
+
+    if (!normalizedField) {
+      return 'Campo';
+    }
+
+    const labels: Record<string, string> = {
+      usuario: 'Usuario',
+      correoElectronico: 'Correo electrónico',
+      numeroCelular: 'Número de celular',
+      captchaId: 'Captcha',
+      captchaRespuesta: 'Captcha'
+    };
+
+    return labels[normalizedField] ?? normalizedField;
   }
 }
