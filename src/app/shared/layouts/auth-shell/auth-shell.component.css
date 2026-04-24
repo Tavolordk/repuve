@@ -72,7 +72,9 @@
   max-width: 280px;
   width: 100%;
   height: auto;
-  margin-top: -8rem;
+  margin-top: -2.5rem;
+  margin-bottom: 0.35rem;
+  object-fit: contain;
 }
 
 .auth-shell__title {
@@ -255,5 +257,16 @@
 
   100% {
     transform: translateX(0) translateY(0) scale(1);
+  }
+}
+@media (min-width: 992px) {
+  .auth-shell__logo {
+    margin-top: -2rem;
+  }
+}
+
+@media (max-width: 991.98px) {
+  .auth-shell__logo {
+    margin-top: 0;
   }
 }
