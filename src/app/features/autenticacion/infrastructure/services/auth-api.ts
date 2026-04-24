@@ -94,7 +94,15 @@ export class AuthApi {
             mensaje: response.mensaje,
             usuario: response.data.usuario,
             canal: response.data.canal,
-            codigoEnviado: response.data.codigoEnviado
+            codigoEnviado: response.data.codigoEnviado,
+            // El backend regresa un token Bearer en este response (al menos
+            // en el flujo generar-contrasena) que debe reusarse al invocar
+            // verifyCode. Se expone tal cual al dominio; si la API no lo
+            // manda (p. ej. crear-cuenta), los campos quedan undefined.
+            token: response.data.token ?? null,
+            tipoToken: response.data.tipoToken ?? null,
+            expiracionMinutos: response.data.expiracionMinutos ?? null,
+            fechaExpiracionUtc: response.data.fechaExpiracionUtc ?? null
           };
         })
       );

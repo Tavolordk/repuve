@@ -309,6 +309,19 @@
   color: #7a123f;
 }
 
+/* Variante amarilla (advertencia) para el mensaje de verificación de cuenta.
+   Reemplaza el color rojo por un tono ámbar/amarillo más asociado a acción
+   requerida por parte del usuario sin transmitir error. */
+.verification-guide.verification-guide--warning {
+  background: rgba(245, 158, 11, 0.12);
+  border-left-color: #b45309;
+  color: #7a3e06;
+}
+
+.verification-guide.verification-guide--warning strong {
+  color: #92400e;
+}
+
 .compact {
   margin-bottom: 0;
 }
@@ -319,6 +332,25 @@
   color: #166534;
   font-weight: 600;
   margin-top: 0.25rem;
+}
+
+/* Forzado visual de mayúsculas/minúsculas. La lógica real la aplica el
+   componente en `onUsuarioInput`/`onCaptchaInput`; esto solo es refuerzo
+   cosmético para evitar parpadeo si el usuario escribe rápido. */
+.force-uppercase {
+  text-transform: uppercase;
+}
+
+.force-uppercase::placeholder {
+  text-transform: none;
+}
+
+.force-lowercase {
+  text-transform: lowercase;
+}
+
+.force-lowercase::placeholder {
+  text-transform: none;
 }
 
 @media (max-width: 991.98px) {

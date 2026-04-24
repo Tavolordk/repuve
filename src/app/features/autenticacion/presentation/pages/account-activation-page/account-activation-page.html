@@ -52,8 +52,10 @@
             </div>
 
             <div class="field-block compact">
-                <input type="text" class="field-input" placeholder="Captcha" [(ngModel)]="captchaRespuesta"
-                    name="captchaRespuesta" [disabled]="loadingCaptcha || captchaExpired || !captchaId" />
+                <input type="text" class="field-input force-uppercase" placeholder="Captcha" autocapitalize="characters"
+                    autocomplete="off" spellcheck="false" [(ngModel)]="captchaRespuesta"
+                    (input)="onCaptchaInput($event)" name="captchaRespuesta"
+                    [disabled]="loadingCaptcha || captchaExpired || !captchaId" />
             </div>
 
             <div *ngIf="errorMessage" class="error-box">{{ errorMessage }}</div>
@@ -91,7 +93,7 @@
 
                 <button type="button" class="btn btn-login" (click)="validateCode()"
                     [disabled]="validating || verificationCode.length < 6">
-                    {{ validating ? 'Validando...' : 'Validar' }}
+                    {{ validating ? 'Validando...' : 'Validar código' }}
                 </button>
             </div>
 
@@ -101,13 +103,16 @@
 
     <!-- DONE -->
     <div *ngIf="step === 'done'" class="verification-step">
-        <div class="verification-title">¡Cuenta activada!</div>
-        <p class="verification-text">
-            Su cuenta ha sido activada correctamente.<br>
-            Ya puede cerrar esta pestaña.
+        <div class="verification-title activation-success-title">¡Cuenta activada!</div>
+        <p class="activation-primary-text">
+            Tu cuenta ha sido activada correctamente.
         </p>
-        <p class="verification-text" style="font-size: 0.88rem; color: #888;">
-            Se le ha enviado el enlace de acceso a su correo electrónico registrado.
+        <p class="activation-secondary-text">
+            Hemos enviado un enlace de acceso a tu correo electrónico registrado. Úsalo para ingresar al portal de
+            REPUVE con tu contraseña temporal.
+        </p>
+        <p class="activation-close-text">
+            Ya puedes cerrar esta pestaña de forma segura.
         </p>
     </div>
 

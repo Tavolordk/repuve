@@ -1,0 +1,73 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.landing-step {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  min-height: 320px;
+  justify-content: center;
+  align-items: stretch;
+  padding: 1rem 0;
+}
+
+.landing-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1f1f1f;
+  text-align: center;
+}
+
+.landing-subtitle {
+  font-size: 0.95rem;
+  color: #4a4a4a;
+  text-align: center;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.landing-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 0.5rem;
+}
+
+.landing-btn {
+  width: 100%;
+  height: 46px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.btn-login {
+  border: none;
+  color: #fff;
+  background: #7a123f;
+}
+
+.btn-login:hover {
+  background: #641033;
+}
+
+.btn-outline-step {
+  border: 1px solid #7a1238;
+  background: #fff;
+  color: #7a1238;
+}
+
+.btn-outline-step:hover {
+  background: rgba(122, 18, 56, 0.05);
+}
+
+@media (max-width: 767.98px) {
+  .landing-btn {
+    height: 44px;
+    font-size: 0.92rem;
+  }
+}

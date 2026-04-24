@@ -221,3 +221,44 @@
     font-size: 1.05rem;
   }
 }
+
+/* Estilos de mensaje de cuenta activada con jerarquía visual y contraste
+   adecuado (reemplaza el gris claro #888 anterior que casi no se leía). */
+.activation-success-title {
+  color: #166534; /* verde oscuro */
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+.activation-primary-text {
+  text-align: center;
+  font-size: 1rem;
+  color: #111;
+  margin: 0;
+}
+
+.activation-secondary-text {
+  text-align: center;
+  font-size: 0.95rem;
+  color: #333;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.activation-close-text {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #555;
+  font-style: italic;
+  margin: 0;
+}
+
+/* Refuerzo visual de mayúsculas para el captcha; la transformación real
+   la aplica el componente en `onCaptchaInput`. */
+.force-uppercase {
+  text-transform: uppercase;
+}
+
+.force-uppercase::placeholder {
+  text-transform: none;
+}

@@ -5,12 +5,10 @@
         <form *ngSwitchCase="'access'" class="login-form" (ngSubmit)="submit()">
             <div class="field-block">
                 <label class="field-label" for="usuario">Cuenta de usuario</label>
-                <input id="usuario" name="usuario" type="text" class="field-input" [(ngModel)]="model.usuario"
-                    (ngModelChange)="onUsuarioChange($event)" />
-                <div *ngIf="isExistingUserFlow && userValidated" class="user-validated-hint">
-                    <fa-icon class="user-validated-icon" [icon]="faCircleCheck" aria-hidden="true"></fa-icon>
-                    Usuario validado
-                </div>
+                <input id="usuario" name="usuario" type="text" class="field-input"
+                    [class.force-uppercase]="isExistingUserFlow" [class.force-lowercase]="!isExistingUserFlow"
+                    autocapitalize="off" autocomplete="off" spellcheck="false" [(ngModel)]="model.usuario"
+                    (input)="onUsuarioInput($event)" />
             </div>
 
             <div class="field-block">
@@ -19,7 +17,7 @@
                     [(ngModel)]="model.correoElectronico" />
             </div>
 
-            <div class="field-block">
+            <div *ngIf="!isExistingUserFlow" class="field-block">
                 <label class="field-label" for="numeroCelular">Número de celular</label>
                 <div class="phone-row">
                     <div class="phone-prefix">+52</div>
@@ -50,8 +48,9 @@
             </div>
 
             <div class="field-block">
-                <input id="captchaRespuesta" name="captchaRespuesta" type="text" class="field-input captcha-input"
-                    [(ngModel)]="model.captchaRespuesta"
+                <input id="captchaRespuesta" name="captchaRespuesta" type="text"
+                    class="field-input captcha-input force-uppercase" autocapitalize="characters" autocomplete="off"
+                    spellcheck="false" [(ngModel)]="model.captchaRespuesta" (input)="onCaptchaInput($event)"
                     [disabled]="loadingCaptcha || captchaExpired || !model.captchaId" />
             </div>
 
@@ -60,23 +59,30 @@
             </div>
 
             <button type="submit" class="btn btn-login w-100"
-                [disabled]="submitting || loadingCaptcha || captchaExpired || !model.captchaId">
-                {{ submitting ? 'Procesando...' : (isExistingUserFlow ? 'Generar contraseña' : 'Crear cuenta') }}
+                [disabled]="submitting || loadingCaptcha || captchaExpired || !model.captchaId || !isAccessFormValid">
+                {{ submitting ? 'Procesando...' : (isExistingUserFlow ? 'Validar cuenta de usuario' : 'Crear cuenta') }}
             </button>
         </form>
 
         <div *ngSwitchCase="'verification-code'" class="verification-step">
             <div class="verification-user">
                 <div class="field-block compact">
-                    <label class="field-label">Cuenta de usuario</label>
-                    <input type="text" class="field-input" [ngModel]="verificationStepData.usuario" name="usuarioStep2"
-                        readonly />
+                    <label class="field-label" for="usuarioStep2">Cuenta de usuario</label>
+                    <!--
+                        En modo crear-cuenta el usuario ya se validó en el step previo,
+                        por eso el campo permanece readonly.
+                        En modo generar-contrasena este es el primer paso y el usuario
+                        lo captura aquí. Se fuerza mayúsculas igual que en el resto.
+                    -->
+                    <input id="usuarioStep2" type="text" class="field-input force-uppercase" autocapitalize="characters"
+                        autocomplete="off" spellcheck="false" [(ngModel)]="verificationStepData.usuario"
+                        (input)="onUsuarioStep2Input($event)" name="usuarioStep2" [readonly]="!isExistingUserFlow" />
                 </div>
             </div>
 
             <!-- FASE 1: ENVIAR CÓDIGO -->
             <ng-container *ngIf="!verificationCodeSent">
-                <div class="verification-guide">
+                <div class="verification-guide verification-guide--warning">
                     <strong>Verificación de cuenta.</strong>
                     Selecciona el medio por el que deseas recibir tu código de verificación.
                 </div>
@@ -136,8 +142,9 @@
 
                 <div class="field-block compact">
                     <label class="field-label" for="captchaRespuestaStep2Send">Captcha</label>
-                    <input id="captchaRespuestaStep2Send" type="text" class="field-input captcha-input"
-                        placeholder="Ingresa el captcha" [(ngModel)]="model.captchaRespuesta"
+                    <input id="captchaRespuestaStep2Send" type="text" class="field-input captcha-input force-uppercase"
+                        placeholder="Ingresa el captcha" autocapitalize="characters" autocomplete="off"
+                        spellcheck="false" [(ngModel)]="model.captchaRespuesta" (input)="onCaptchaInput($event)"
                         name="captchaRespuestaStep2Send"
                         [disabled]="loadingCaptcha || captchaExpired || !model.captchaId" />
                 </div>
@@ -214,12 +221,18 @@
 
         <div *ngSwitchCase="'done'" class="verification-step">
             <div class="verification-title success-title">
-                <fa-icon class="success-icon" [icon]="faCircleCheck" aria-hidden="true"></fa-icon> Proceso iniciado
-                correctamente
+                <fa-icon class="success-icon" [icon]="faCircleCheck" aria-hidden="true"></fa-icon> ¡Proceso completado
+                correctamente!
             </div>
 
             <p class="verification-text">
-                Tus datos han sido registrados y recibirás un correo electrónico con los detalles del proceso.
+                Hemos enviado una contraseña temporal a tu correo electrónico registrado. Úsala para ingresar al portal
+                de REPUVE.
+            </p>
+
+            <p class="verification-text">
+                <strong>Recuerda:</strong> la contraseña expirará en 15 minutos. Si no la usas a tiempo, deberás generar
+                una nueva.
             </p>
 
             <p class="verification-text muted">

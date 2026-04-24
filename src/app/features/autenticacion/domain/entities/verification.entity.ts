@@ -13,6 +13,16 @@ export interface SendVerificationCodeResponseEntity {
     usuario: string;
     canal: string;
     codigoEnviado: boolean;
+    /**
+     * Token Bearer que se devuelve tras solicitar el código (en flujo
+     * `generar-contrasena`). Debe reusarse como Authorization en la
+     * llamada posterior a `verifyCode`. En el flujo `crear-cuenta` puede
+     * venir vacío porque el token ya se obtuvo en un paso previo.
+     */
+    token?: string | null;
+    tipoToken?: string | null;
+    expiracionMinutos?: number | null;
+    fechaExpiracionUtc?: string | null;
 }
 
 export interface VerifyCodeRequestEntity {
@@ -56,6 +66,10 @@ export type SendVerificationCodeApiResponse = ApiEnvelope<{
     usuario: string;
     canal: string;
     codigoEnviado: boolean;
+    token?: string | null;
+    tipoToken?: string | null;
+    expiracionMinutos?: number | null;
+    fechaExpiracionUtc?: string | null;
 }>;
 
 export type VerifyCodeApiResponse = ApiEnvelope<{

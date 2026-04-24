@@ -94,6 +94,33 @@ export class AccountActivationPageComponent implements OnInit, OnDestroy {
     }
 
     /**
+     * Transforma el input del captcha a mayúsculas sin importar qué escriba el
+     * usuario. Mantiene la posición del cursor para no romper la escritura.
+     */
+    onCaptchaInput(event: Event): void {
+        const input = event.target as HTMLInputElement;
+        const raw = input.value ?? '';
+        const selectionStart = input.selectionStart;
+        const selectionEnd = input.selectionEnd;
+
+        const transformed = raw.toUpperCase();
+
+        if (transformed !== raw) {
+            this.captchaRespuesta = transformed;
+            input.value = transformed;
+            if (selectionStart !== null && selectionEnd !== null) {
+                try {
+                    input.setSelectionRange(selectionStart, selectionEnd);
+                } catch {
+                    // ignorado intencionalmente
+                }
+            }
+        } else {
+            this.captchaRespuesta = transformed;
+        }
+    }
+
+    /**
      * Página 6: al dar clic en un enlace expirado o inválido, se redirige a la
      * pantalla principal de Login. No se muestra la pantalla "Activación fallida".
      */
