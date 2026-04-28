@@ -80,22 +80,92 @@ export class BlockedActivationPageComponent implements OnInit, OnDestroy {
     private captchaSub?: Subscription;
     private countdownId: ReturnType<typeof setInterval> | null = null;
     private captchaVersion = 0;
-
-    ngOnInit(): void {
-        this.token = this.route.snapshot.queryParamMap.get('token')?.trim() ?? '';
-
-        if (this.token) {
-            this.tokenMode = true;
-            this.blockedModalOpen = false;
-            this.loadTokenReactivation();
-            return;
+    private readonly estatusMap: Record<number, { title: string; message: string }> = {
+        1: {
+            title: 'Cuenta en preregistro',
+            message: 'La cuenta se encuentra en preregistro. Debe completarse el proceso de activación.'
+        },
+        2: {
+            title: 'Cuenta activa',
+            message: 'La cuenta se encuentra activa.'
+        },
+        3: {
+            title: 'Cuenta suspendida',
+            message: 'La cuenta se encuentra suspendida. Contacta al administrador.'
+        },
+        4: {
+            title: 'Cuenta inactiva',
+            message: 'La cuenta se encuentra inactiva. Puedes solicitar la activación.'
+        },
+        5: {
+            title: 'Cuenta dada de baja',
+            message: 'La cuenta ha sido dada de baja y no puede ser utilizada.'
+        },
+        6: {
+            title: 'Cuenta bloqueada',
+            message: 'La cuenta ha sido bloqueada. Puedes solicitar la activación.'
+        },
+        7: {
+            title: 'Cuenta rechazada',
+            message: 'La cuenta fue rechazada. Verifica la información o contacta soporte.'
         }
+    };
+    private showStatusModal(idEstatus: number, mensajeBackend?: string): void {
+        const status = this.estatusMap[idEstatus] ?? {
+            title: 'Cuenta no disponible',
+            message: 'No se pudo determinar el estatus de la cuenta.'
+        };
 
-        this.tokenMode = false;
-        this.step = 'blocked-dialog';
+        this.modalTitle = status.title;
+
+        // Si backend manda mensaje → lo usas
+        this.modalMessage = mensajeBackend || status.message;
+
         this.blockedModalOpen = true;
     }
 
+    // ngOnInit(): void {
+    //     this.token = this.route.snapshot.queryParamMap.get('token')?.trim() ?? '';
+
+    //     if (this.token) {
+    //         this.tokenMode = true;
+    //         this.blockedModalOpen = false;
+    //         this.loadTokenReactivation();
+    //         return;
+    //     }
+
+    //     this.tokenMode = false;
+    //     this.step = 'blocked-dialog';
+    //     this.blockedModalOpen = true;
+    // }
+
+    ngOnInit(): void {
+  const navigationState = history.state as {
+    title?: string;
+    message?: string;
+  };
+
+  if (navigationState?.title) {
+    this.modalTitle = navigationState.title;
+  }
+
+  if (navigationState?.message) {
+    this.modalMessage = navigationState.message;
+  }
+
+  this.token = this.route.snapshot.queryParamMap.get('token')?.trim() ?? '';
+
+  if (this.token) {
+    this.tokenMode = true;
+    this.blockedModalOpen = false;
+    this.loadTokenReactivation();
+    return;
+  }
+
+  this.tokenMode = false;
+  this.step = 'blocked-dialog';
+  this.blockedModalOpen = true;
+}
     ngOnDestroy(): void {
         this.captchaSub?.unsubscribe();
         this.stopCountdown();

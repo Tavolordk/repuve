@@ -58,10 +58,16 @@
                 {{ errorMessage }}
             </div>
 
-            <button type="submit" class="btn btn-login w-100"
-                [disabled]="submitting || loadingCaptcha || captchaExpired || !model.captchaId || !isAccessFormValid">
-                {{ submitting ? 'Procesando...' : (isExistingUserFlow ? 'Validar cuenta de usuario' : 'Crear cuenta') }}
+            <div class="form-actions">
+                <button type="button" class="btn btn-outline-step" (click)="goToLogin()">
+                Regresar
             </button>
+
+                <button type="submit" class="btn btn-login"
+                    [disabled]="submitting || loadingCaptcha || captchaExpired || !model.captchaId || !isAccessFormValid">
+                    {{ submitting ? 'Procesando...' : (isExistingUserFlow ? 'Validar cuenta de usuario' : 'Renovar cuenta') }}
+                </button>
+            </div>
         </form>
 
         <div *ngSwitchCase="'verification-code'" class="verification-step">
@@ -158,8 +164,17 @@
                         Regresar
                     </button>
 
-                    <button type="button" class="btn btn-login" (click)="sendVerificationCode()"
-                        [disabled]="sendingVerificationCode || loadingCaptcha || captchaExpired || !model.captchaId">
+                    <button
+                        type="button"
+                        class="btn btn-login"
+                        (click)="sendVerificationCode()"
+                        [disabled]="
+                            sendingVerificationCode ||
+                            loadingCaptcha ||
+                            captchaExpired ||
+                            !model.captchaId ||
+                            !isVerificationFormValid
+                        ">
                         {{ sendingVerificationCode ? 'Enviando...' : 'Enviar código' }}
                     </button>
                 </div>

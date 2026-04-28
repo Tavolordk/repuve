@@ -391,3 +391,15 @@
     text-transform: none;
   }
 }
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+
+    .btn-outline-step,
+    .btn-login {
+        flex: 1;        // cada botón ocupa exactamente el 50%
+        margin: 0;      // elimina cualquier margen previo
+    }
+}

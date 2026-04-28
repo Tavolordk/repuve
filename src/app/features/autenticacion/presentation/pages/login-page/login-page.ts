@@ -141,7 +141,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   /**
    * Transforma el input del campo "usuario" según el modo activo:
-   *   - Crear cuenta: siempre minúsculas (aunque el usuario tenga Bloq Mayús).
+   *   - Renovación de cuenta: siempre minúsculas (aunque el usuario tenga Bloq Mayús).
    *   - Generar contraseña: siempre mayúsculas (aunque escriba en minúsculas).
    * Mantiene la posición del cursor para no interrumpir el tecleo.
    */
@@ -411,6 +411,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       })
     ).subscribe({
       next: (response) => {
+        console.log('✅ RESPONSE submit:', response);
         this.authSessionService.saveSession(response);
 
         this.verificationStepData = {
@@ -430,16 +431,21 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       },
       error: (error) => {
+  console.log('❌ ERROR COMPLETO sendVerificationCode:', error);
+  console.log('❌ ERROR BODY:', error?.error);
+  console.log('❌ STATUS HTTP:', error?.status);
 
-        const backendMessage =
-          error?.error?.message ||
-          error?.error?.mensaje ||
-          error?.message ||
-          'No se pudo completar la solicitud.';
+  if (this.handleBlockedAccountError(error)) {
+    return;
+  }
 
-        this.openErrorModal(backendMessage);
-        this.loadCaptcha();
-      }
+  this.errorMessage =
+    error?.error?.mensaje ||
+    error?.message ||
+    'No se pudo enviar el código de verificación.';
+
+  this.loadCaptcha();
+}
     });
   }
 
@@ -503,25 +509,44 @@ export class LoginComponent implements OnInit, OnDestroy {
    * Detecta una respuesta de cuenta bloqueada y navega DIRECTAMENTE a la
    * pantalla de cuenta bloqueada, sin abrir ningún modal intermedio.
    */
-  private handleBlockedAccountError(error: unknown): boolean {
-    const err = error as {
-      status?: number;
-      error?: { cuentaBloqueada?: boolean; data?: { cuentaBloqueada?: boolean } };
-    };
+  // private handleBlockedAccountError(error: unknown): boolean {
+  //   const err = error as {
+  //     status?: number;
+  //     error?: { cuentaBloqueada?: boolean; data?: { cuentaBloqueada?: boolean } };
+  //   };
 
-    const isBloqueada =
-      err?.status === 423 ||
-      err?.error?.cuentaBloqueada === true ||
-      err?.error?.data?.cuentaBloqueada === true;
+  //   const isBloqueada =
+  //     err?.status === 423 ||
+  //     err?.error?.cuentaBloqueada === true ||
+  //     err?.error?.data?.cuentaBloqueada === true;
 
-    if (!isBloqueada) {
-      return false;
-    }
+  //   if (!isBloqueada) {
+  //     return false;
+  //   }
 
-    this.modalState.isOpen = false;
-    this.router.navigate(['/cuenta-bloqueada']);
-    return true;
+  //   this.modalState.isOpen = false;
+  //   this.router.navigate(['/cuenta-bloqueada']);
+  //   return true;
+  // }
+  private handleBlockedAccountError(error: any): boolean {
+  const isBloqueada = error?.status === 423;
+
+  if (!isBloqueada) {
+    return false;
   }
+
+  const mensaje = error?.error?.mensaje || 
+    'La cuenta no se encuentra activa. No es posible continuar con el proceso.';
+
+  this.router.navigate(['/cuenta-bloqueada'], {
+    state: {
+      title: 'Cuenta no activa',
+      message: mensaje
+    }
+  });
+
+  return true;
+}
 
   private openUserValidatedModal(): void {
     // El modal de "Usuario validado" fue removido intencionalmente del flujo
@@ -585,7 +610,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     // Validación del campo dinámico según el canal seleccionado.
     const correoInput = (this.verificationStepData.correoElectronico ?? '').trim();
     const celularInput = (this.verificationStepData.numeroCelular ?? '').replace(/\D/g, '');
-
+  
     if (this.verificationChannel === 'email') {
       if (!correoInput) {
         this.errorMessage = 'Ingresa el correo electrónico para recibir el código.';
@@ -718,6 +743,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       })
     ).subscribe({
       next: (response) => {
+         console.log('✅ RESPONSE sendVerificationCode:', response);
         if (!response.codigoVerificado) {
           this.errorMessage = response.mensaje || 'El código no pudo ser validado.';
           return;
@@ -728,6 +754,9 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       },
       error: (error) => {
+        console.log('❌ ERROR COMPLETO sendVerificationCode:', error);
+  console.log('❌ ERROR BODY:', error?.error);
+  console.log('❌ STATUS HTTP:', error?.status);
         if (this.handleBlockedAccountError(error)) {
           return;
         }
@@ -819,4 +848,24 @@ export class LoginComponent implements OnInit, OnDestroy {
 
     return labels[normalizedField] ?? normalizedField;
   }
+
+  get isVerificationFormValid(): boolean {
+  const captchaValido = !!this.model.captchaRespuesta?.trim();
+
+  if (this.verificationChannel === 'email') {
+    return !!(
+      this.verificationStepData.correoElectronico?.trim() &&
+      captchaValido
+    );
+  }
+
+  if (this.verificationChannel === 'telegram') {
+    return !!(
+      this.verificationStepData.numeroCelular?.trim() &&
+      captchaValido
+    );
+  }
+
+  return false;
+}
 }
