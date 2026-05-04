@@ -12,6 +12,7 @@ import {
   AccessFeedbackModalVariant
 } from '../../../../../shared/components/access-feedback-modal/access-feedback-modal';
 import { AuthSessionService } from '../../../infrastructure/services/auth-session.service';
+import { resolveAuthErrorMessage } from '../../../infrastructure/utils/auth-error-message';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faCircleCheck, faClock } from '@fortawesome/free-solid-svg-icons';
 
@@ -225,14 +226,25 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
   }
 
-  loadCaptcha(): void {
+  /**
+   * Carga un captcha nuevo.
+   *
+   * @param preserveErrorMessage cuando es true, no se limpia `errorMessage`
+   *        al iniciar la carga ni al completarla con éxito. Se usa al
+   *        refrescar el captcha desde un handler de error: queremos que el
+   *        captcha se renueve, pero el mensaje que acabamos de fijar
+   *        (p. ej. "El usuario ya fue migrado.") debe seguir visible.
+   */
+  loadCaptcha(preserveErrorMessage: boolean = false): void {
     const currentVersion = ++this.captchaRequestVersion;
 
     this.captchaSubscription?.unsubscribe();
     this.stopCountdown();
 
     this.loadingCaptcha = true;
-    this.errorMessage = '';
+    if (!preserveErrorMessage) {
+      this.errorMessage = '';
+    }
     this.captchaExpired = false;
     this.captchaTtlSeconds = 0;
 
@@ -431,21 +443,25 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       },
       error: (error) => {
-  console.log('❌ ERROR COMPLETO sendVerificationCode:', error);
-  console.log('❌ ERROR BODY:', error?.error);
-  console.log('❌ STATUS HTTP:', error?.status);
+        console.log('❌ ERROR COMPLETO submit:', error);
+        console.log('❌ ERROR BODY:', error?.error);
+        console.log('❌ STATUS HTTP:', error?.status);
 
-  if (this.handleBlockedAccountError(error)) {
-    return;
-  }
+        if (this.handleBlockedAccountError(error)) {
+          return;
+        }
 
-  this.errorMessage =
-    error?.error?.mensaje ||
-    error?.message ||
-    'No se pudo enviar el código de verificación.';
-
-  this.loadCaptcha();
-}
+        // IMPORTANTE: primero refrescamos el captcha pidiéndole que NO borre
+        // errorMessage, y luego fijamos el texto correspondiente al status HTTP.
+        // Si lo hiciéramos al revés, loadCaptcha() limpiaría el mensaje y el
+        // usuario nunca lo vería.
+        this.loadCaptcha(true);
+        this.errorMessage = resolveAuthErrorMessage(
+          error,
+          'No se pudo enviar el código de verificación.'
+        );
+        this.cdr.detectChanges();
+      }
     });
   }
 
@@ -509,44 +525,25 @@ export class LoginComponent implements OnInit, OnDestroy {
    * Detecta una respuesta de cuenta bloqueada y navega DIRECTAMENTE a la
    * pantalla de cuenta bloqueada, sin abrir ningún modal intermedio.
    */
-  // private handleBlockedAccountError(error: unknown): boolean {
-  //   const err = error as {
-  //     status?: number;
-  //     error?: { cuentaBloqueada?: boolean; data?: { cuentaBloqueada?: boolean } };
-  //   };
-
-  //   const isBloqueada =
-  //     err?.status === 423 ||
-  //     err?.error?.cuentaBloqueada === true ||
-  //     err?.error?.data?.cuentaBloqueada === true;
-
-  //   if (!isBloqueada) {
-  //     return false;
-  //   }
-
-  //   this.modalState.isOpen = false;
-  //   this.router.navigate(['/cuenta-bloqueada']);
-  //   return true;
-  // }
   private handleBlockedAccountError(error: any): boolean {
-  const isBloqueada = error?.status === 423;
+    const isBloqueada = error?.status === 423;
 
-  if (!isBloqueada) {
-    return false;
-  }
-
-  const mensaje = error?.error?.mensaje || 
-    'La cuenta no se encuentra activa. No es posible continuar con el proceso.';
-
-  this.router.navigate(['/cuenta-bloqueada'], {
-    state: {
-      title: 'Cuenta no activa',
-      message: mensaje
+    if (!isBloqueada) {
+      return false;
     }
-  });
 
-  return true;
-}
+    const mensaje = error?.error?.mensaje ||
+      'La cuenta no se encuentra activa. No es posible continuar con el proceso.';
+
+    this.router.navigate(['/cuenta-bloqueada'], {
+      state: {
+        title: 'Cuenta no activa',
+        message: mensaje
+      }
+    });
+
+    return true;
+  }
 
   private openUserValidatedModal(): void {
     // El modal de "Usuario validado" fue removido intencionalmente del flujo
@@ -610,7 +607,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     // Validación del campo dinámico según el canal seleccionado.
     const correoInput = (this.verificationStepData.correoElectronico ?? '').trim();
     const celularInput = (this.verificationStepData.numeroCelular ?? '').replace(/\D/g, '');
-  
+
     if (this.verificationChannel === 'email') {
       if (!correoInput) {
         this.errorMessage = 'Ingresa el correo electrónico para recibir el código.';
@@ -704,15 +701,22 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       },
       error: (error) => {
+        console.log('❌ ERROR COMPLETO sendVerificationCode:', error);
+        console.log('❌ ERROR BODY:', error?.error);
+        console.log('❌ STATUS HTTP:', error?.status);
+
         if (this.handleBlockedAccountError(error)) {
           return;
         }
 
-        this.errorMessage =
-          error?.error?.mensaje ||
-          error?.message ||
-          'No se pudo enviar el código de verificación.';
-        this.loadCaptcha();
+        // Igual que en submit(): refrescamos el captcha sin borrar el
+        // errorMessage y luego fijamos el mensaje según el status HTTP.
+        this.loadCaptcha(true);
+        this.errorMessage = resolveAuthErrorMessage(
+          error,
+          'No se pudo enviar el código de verificación.'
+        );
+        this.cdr.detectChanges();
       }
     });
   }
@@ -743,7 +747,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       })
     ).subscribe({
       next: (response) => {
-         console.log('✅ RESPONSE sendVerificationCode:', response);
+        console.log('✅ RESPONSE sendVerificationCode:', response);
         if (!response.codigoVerificado) {
           this.errorMessage = response.mensaje || 'El código no pudo ser validado.';
           return;
@@ -755,16 +759,19 @@ export class LoginComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.log('❌ ERROR COMPLETO sendVerificationCode:', error);
-  console.log('❌ ERROR BODY:', error?.error);
-  console.log('❌ STATUS HTTP:', error?.status);
+        console.log('❌ ERROR BODY:', error?.error);
+        console.log('❌ STATUS HTTP:', error?.status);
         if (this.handleBlockedAccountError(error)) {
           return;
         }
 
-        this.errorMessage =
-          error?.error?.mensaje ||
-          error?.message ||
-          'No se pudo validar el código.';
+        // En este handler no se llama a loadCaptcha, por lo que basta con
+        // fijar el mensaje directamente y forzar el detectChanges.
+        this.errorMessage = resolveAuthErrorMessage(
+          error,
+          'No se pudo validar el código.'
+        );
+        this.cdr.detectChanges();
       }
     });
   }
@@ -850,22 +857,22 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   get isVerificationFormValid(): boolean {
-  const captchaValido = !!this.model.captchaRespuesta?.trim();
+    const captchaValido = !!this.model.captchaRespuesta?.trim();
 
-  if (this.verificationChannel === 'email') {
-    return !!(
-      this.verificationStepData.correoElectronico?.trim() &&
-      captchaValido
-    );
+    if (this.verificationChannel === 'email') {
+      return !!(
+        this.verificationStepData.correoElectronico?.trim() &&
+        captchaValido
+      );
+    }
+
+    if (this.verificationChannel === 'telegram') {
+      return !!(
+        this.verificationStepData.numeroCelular?.trim() &&
+        captchaValido
+      );
+    }
+
+    return false;
   }
-
-  if (this.verificationChannel === 'telegram') {
-    return !!(
-      this.verificationStepData.numeroCelular?.trim() &&
-      captchaValido
-    );
-  }
-
-  return false;
-}
 }

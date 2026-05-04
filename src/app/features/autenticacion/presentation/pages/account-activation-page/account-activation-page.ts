@@ -12,6 +12,7 @@ import { Subscription, finalize, timeout } from 'rxjs';
 
 import { AuthShellComponent } from '../../../../../shared/layouts/auth-shell/auth-shell.component';
 import { AuthFacade } from '../../../application/facades/auth-facade';
+import { resolveAuthErrorMessage } from '../../../infrastructure/utils/auth-error-message';
 
 type PageStep = 'loading' | 'verify-code' | 'done' | 'error';
 
@@ -130,7 +131,14 @@ export class AccountActivationPageComponent implements OnInit, OnDestroy {
 
     // ── Captcha ───────────────────────────────────────────────────────────────
 
-    loadCaptcha(): void {
+    /**
+     * @param preserveErrorMessage cuando es true, no se limpia `errorMessage`
+     *        al iniciar la carga. Se usa al refrescar el captcha desde un
+     *        handler de error: queremos que el captcha se renueve, pero el
+     *        mensaje de error que acabamos de fijar (p. ej. "El usuario ya
+     *        fue migrado.") debe seguir visible.
+     */
+    loadCaptcha(preserveErrorMessage: boolean = false): void {
         this.captchaSubscription?.unsubscribe();
         this.stopCountdown();
 
@@ -139,7 +147,9 @@ export class AccountActivationPageComponent implements OnInit, OnDestroy {
         this.captchaId = '';
         this.captchaRespuesta = '';
         this.captchaImageSrc = '';
-        this.errorMessage = '';
+        if (!preserveErrorMessage) {
+            this.errorMessage = '';
+        }
 
         this.cdr.detectChanges();
 
@@ -229,11 +239,18 @@ export class AccountActivationPageComponent implements OnInit, OnDestroy {
                 this.loadCaptcha();
             },
             error: (error) => {
-                this.errorMessage =
-                    error?.error?.mensaje ||
-                    error?.message ||
-                    'No se pudo enviar el código.';
-                this.loadCaptcha();
+                console.log('❌ ERROR COMPLETO sendCode:', error);
+                console.log('❌ ERROR BODY:', error?.error);
+                console.log('❌ STATUS HTTP:', error?.status);
+
+                // Refrescar captcha sin borrar el mensaje de error y luego
+                // fijar el texto correspondiente al status HTTP.
+                this.loadCaptcha(true);
+                this.errorMessage = resolveAuthErrorMessage(
+                    error,
+                    'No se pudo enviar el código.'
+                );
+                this.cdr.detectChanges();
             }
         });
     }
@@ -272,11 +289,16 @@ export class AccountActivationPageComponent implements OnInit, OnDestroy {
                 }
             },
             error: (error) => {
-                this.errorMessage =
-                    error?.error?.mensaje ||
-                    error?.message ||
-                    'No se pudo verificar el código.';
+                console.log('❌ ERROR COMPLETO validateCode:', error);
+                console.log('❌ ERROR BODY:', error?.error);
+                console.log('❌ STATUS HTTP:', error?.status);
+
+                this.errorMessage = resolveAuthErrorMessage(
+                    error,
+                    'No se pudo verificar el código.'
+                );
                 this.verificationCode = '';
+                this.cdr.detectChanges();
             }
         });
     }
