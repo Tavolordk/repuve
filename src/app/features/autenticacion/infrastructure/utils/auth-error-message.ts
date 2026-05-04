@@ -21,6 +21,16 @@ export const UNKNOWN_ERROR_MESSAGE =
     'Error desconocido, por favor contacte a su administrador.';
 
 /**
+ * Texto mostrado cuando el backend devuelve un 400 con `errors.usuario`
+ * (formato/longitud incorrecta). En el flujo de generar-contraseña esto
+ * ocurre típicamente cuando el usuario teclea una cuenta vieja que aún
+ * no fue renovada/migrada al nuevo formato.
+ */
+export const INVALID_RENEWED_ACCOUNT_MESSAGE =
+    'La cuenta ingresada no corresponde a una cuenta renovada válida. ' +
+    'Verifica que la cuenta sea correcta e inténtalo nuevamente.';
+
+/**
  * Códigos HTTP cuyo mensaje proviene del backend o tiene un manejo
  * dedicado en la UI (modales, redirecciones, validaciones de formulario).
  * Para estos NO se sobreescribe el mensaje original.
@@ -52,14 +62,19 @@ interface AuthHttpErrorLike {
  * Reglas (de mayor a menor prioridad):
  *   1. Si el status es 409 → siempre `USER_ALREADY_MIGRATED_MESSAGE`,
  *      sin importar lo que mande el backend.
- *   2. Si el error trae `errors` (validación 4xx) → se respeta el manejo
- *      previo: se devuelve el mensaje del backend (`mensaje` / `message` /
- *      `title`) o, en su defecto, el `fallbackMessage` recibido.
- *   3. Si el status pertenece a un código con manejo dedicado (423, etc.)
+ *   2. Si el error trae `errors.usuario` (validación 4xx donde el campo
+ *      con problema es la cuenta de usuario) → mensaje específico de
+ *      cuenta no renovada (`INVALID_RENEWED_ACCOUNT_MESSAGE`). Esto
+ *      sobrescribe el texto en inglés que manda .NET por defecto
+ *      ("One or more validation errors occurred.").
+ *   3. Si el error trae `errors` pero por OTRO campo distinto de
+ *      `usuario` → se respeta el manejo previo: se devuelve el mensaje
+ *      del backend (`mensaje` / `message` / `title`) o el `fallbackMessage`.
+ *   4. Si el status pertenece a un código con manejo dedicado (423, etc.)
  *      → se respeta el mensaje original del backend / fallback.
- *   4. Si el status es 4xx o 5xx (no contemplado arriba) →
+ *   5. Si el status es 4xx o 5xx (no contemplado arriba) →
  *      `UNKNOWN_ERROR_MESSAGE`.
- *   5. En cualquier otro caso → mensaje del backend o `fallbackMessage`.
+ *   6. En cualquier otro caso → mensaje del backend o `fallbackMessage`.
  *
  * @param error            El error capturado del observable HTTP.
  * @param fallbackMessage  Texto a usar cuando ni el backend ni las reglas
@@ -84,24 +99,56 @@ export function resolveAuthErrorMessage(
         return USER_ALREADY_MIGRATED_MESSAGE;
     }
 
-    // 2) Errores de validación (campo `errors` presente en el body): el
-    //    componente ya construye el mensaje, aquí solo respetamos lo que
-    //    venga del backend o el fallback original.
-    if (err.error?.errors && typeof err.error.errors === 'object') {
+    // 2-3) Errores de validación con `errors`.
+    const validationErrors = err.error?.errors;
+    if (validationErrors && typeof validationErrors === 'object') {
+        // 2) Si el campo problemático es la cuenta de usuario, mostramos un
+        //    mensaje en español propio en lugar del genérico inglés del
+        //    backend ("One or more validation errors occurred.").
+        if (hasUsuarioValidationError(validationErrors)) {
+            return INVALID_RENEWED_ACCOUNT_MESSAGE;
+        }
+
+        // 3) Otros campos de validación: respetamos el manejo previo.
         return backendMessage || fallbackMessage;
     }
 
-    // 3) Códigos con manejo dedicado en la UI: respetamos su mensaje original.
+    // 4) Códigos con manejo dedicado en la UI: respetamos su mensaje original.
     if (status !== undefined && STATUSES_WITH_DEDICATED_HANDLING.has(status)) {
         return backendMessage || fallbackMessage;
     }
 
-    // 4) Cualquier otro 4xx o 5xx → mensaje genérico de error desconocido.
+    // 5) Cualquier otro 4xx o 5xx → mensaje genérico de error desconocido.
     if (status !== undefined && status >= 400 && status < 600) {
         return UNKNOWN_ERROR_MESSAGE;
     }
 
-    // 5) Sin status HTTP claro (timeout, error de red, etc.) → mensaje del
+    // 6) Sin status HTTP claro (timeout, error de red, etc.) → mensaje del
     //    backend si lo hubiera, o el fallback que mande la pantalla.
     return backendMessage || fallbackMessage;
+}
+
+/**
+ * Devuelve `true` si el objeto `errors` del backend contiene una entrada
+ * para el campo `usuario` (con o sin variantes de capitalización) y esa
+ * entrada efectivamente trae al menos un mensaje. Comparaciones case-
+ * insensitive porque el backend a veces serializa con `Usuario`.
+ */
+function hasUsuarioValidationError(
+    errors: Record<string, string[] | string>
+): boolean {
+    for (const key of Object.keys(errors)) {
+        if (key.toLowerCase() !== 'usuario') {
+            continue;
+        }
+
+        const value = errors[key];
+        if (Array.isArray(value)) {
+            return value.some((m) => typeof m === 'string' && !!m.trim());
+        }
+        if (typeof value === 'string') {
+            return !!value.trim();
+        }
+    }
+    return false;
 }

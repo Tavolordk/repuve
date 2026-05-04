@@ -3,10 +3,14 @@
 }
 
 .auth-shell {
-  height: 100vh;
+  /* min-height (no height fija) para que el shell pueda crecer hacia abajo
+     cuando el contenido del panel supere la altura del viewport. Antes
+     usaba `height: 100vh; overflow: hidden;`, lo que recortaba el contenido
+     y forzaba un scroll interno en el panel; al aparecer la caja de error
+     el contenido se desbordaba y el logo se solapaba con los labels. Con
+     `min-height` el shell crece y el scroll lo asume la página. */
   min-height: 100vh;
   position: relative;
-  overflow: hidden;
   background:
     linear-gradient(
       90deg,
@@ -18,19 +22,22 @@
 }
 
 .auth-shell__row {
-  height: 100vh;
   min-height: 100vh;
 }
 
 .auth-shell__col {
-  height: 100vh;
   min-height: 100vh;
 }
 
 .auth-shell::before {
   content: '';
   position: absolute;
-  inset: 0;
+  /* Anclamos el ángel al primer 100vh del shell aunque éste crezca,
+     así no se "estira" si el panel agrega altura por overflow. */
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100vh;
   background: url('/images/angel.png') 44% center / auto 92vh no-repeat;
   z-index: 1;
   pointer-events: none;
@@ -40,7 +47,12 @@
 .auth-shell::after {
   content: '';
   position: absolute;
-  inset: 0;
+  /* Mismo criterio que ::before: el degradado decorativo se queda en la
+     primera pantalla, no se repite cuando el shell crece. */
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100vh;
   background: linear-gradient(
     90deg,
     rgba(0, 0, 0, 0.06) 0%,
@@ -57,15 +69,42 @@
 
 .auth-shell__panel {
   width: 100%;
-  height: 100%;
+  /* Antes: `height: 100%` + `overflow-y: auto` (scroll interno). Ahora
+     `min-height: 100%` permite que el panel crezca con su contenido —
+     incluido el caso en que aparece la caja de error — y el scroll lo
+     asume la página, no el panel. Así el logo y el header nunca se
+     desplazan ni se solapan con los labels del formulario. */
+  min-height: 100%;
   max-width: none;
   padding: 1.25rem 3rem 1.25rem 4.5rem;
   border-radius: 34px 0 0 34px;
   background: rgba(245, 245, 245, 0.64);
   backdrop-filter: blur(3px);
   -webkit-backdrop-filter: blur(3px);
-  overflow-y: auto;
-  overflow-x: hidden;
+  /* Centrado vertical "seguro": cuando el contenido cabe en el viewport
+     los pseudo-elementos hermanos se reparten el espacio sobrante por
+     igual y el panel se ve centrado, idéntico al diseño anterior. Cuando
+     el contenido excede la altura del panel los pseudo-elementos
+     colapsan a 0 y el contenido fluye desde arriba; el resto se ve
+     haciendo scroll de página. Esto reemplaza al patrón
+     `justify-content: center`, que cortaba el contenido por arriba al
+     aparecer el mensaje de error. */
+  justify-content: flex-start;
+}
+
+.auth-shell__panel::before,
+.auth-shell__panel::after {
+  content: '';
+  flex: 1 0 0;
+  min-height: 0;
+}
+
+/* Garantiza que ningún hijo proyectado (logo, títulos, formulario) se
+   comprima cuando el contenido del panel supera la altura disponible.
+   Sin esto, en condiciones de overflow el navegador podría reducir la
+   altura intrínseca de cada hijo flex y alterar el layout visual. */
+.auth-shell__panel > * {
+  flex-shrink: 0;
 }
 
 .auth-shell__logo {
