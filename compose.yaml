@@ -1,0 +1,7 @@
+services:
+  rpv-front:
+    image: rpv-front:1.0.0
+    container_name: rpv-front
+    ports:
+      - "8080:80"
+    restart: unless-stopped
