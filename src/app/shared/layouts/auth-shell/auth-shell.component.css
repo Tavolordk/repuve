@@ -309,3 +309,34 @@
     margin-top: 0;
   }
 }
+/* ============================================================
+   Pantallas grandes (Laptop L: 1400px+)
+   El ángel debe escalar con el ancho del viewport y mantenerse
+   anclado a la columna izquierda, asomándose sobre el formulario.
+   ============================================================ */
+@media (min-width: 1400px) {
+  .auth-shell::before {
+    /* Tamaño relativo al viewport ancho: el ángel crece con la pantalla */
+    background-size: auto 95vh;
+    background-position: 38% center;
+  }
+}
+
+/* ============================================================
+   Monitores grandes (Desktop: 1900px+) y 4K (2560px+)
+   En viewports muy anchos, mantenemos el ángel proporcional
+   usando vw en vez de vh para que crezca con el ancho.
+   ============================================================ */
+@media (min-width: 1900px) {
+  .auth-shell::before {
+    background-size: 50vw auto; /* 50% del ancho del viewport */
+    background-position: 28% center;
+  }
+}
+
+@media (min-width: 2400px) {
+  .auth-shell::before {
+    background-size: 48vw auto;
+    background-position: 25% center;
+  }
+}
